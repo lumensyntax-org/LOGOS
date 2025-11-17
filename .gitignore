@@ -1,0 +1,35 @@
+# Node
+node_modules/
+.pnpm-store/
+*.log
+pnpm-debug.log*
+npm-debug.log*
+yarn-error.log*
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Caches
+.cache/
+.eslintcache
+
+# Tests / Coverage
+coverage/
+
+# Env files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# LOGOS specific
+benchmark-results/
+*.benchmark.json

@@ -1,0 +1,47 @@
+{
+  "name": "logos-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Logically Organized Gap-Operating System — Christological Architecture for AI Verification",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "demo": "pnpm --filter @logos/core exec tsx ../../demo-script.ts",
+    "dev:service": "pnpm --filter @logos/service dev",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "format": "pnpm -r format",
+    "ci:local": "pnpm -w install && pnpm -r build && pnpm -r test -- --run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "esbuild": "^0.25.10",
+    "eslint": "^9.36.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.46.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "^0.25.10"
+    }
+  },
+  "keywords": [
+    "verification",
+    "truth",
+    "christology",
+    "theology",
+    "ai-alignment",
+    "gap-theory",
+    "logos"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lumensyntax-org/LOGOS.git"
+  },
+  "license": "Apache-2.0"
+}
