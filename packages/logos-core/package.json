@@ -16,6 +16,7 @@
   "scripts": {
     "build": "tsup src/index.ts --dts --format cjs,esm",
     "test": "vitest",
+    "test:ci": "vitest --run",
     "test:coverage": "vitest --coverage --run",
     "lint": "eslint 'src/**/*.ts'",
     "typecheck": "tsc -p tsconfig.build.json",

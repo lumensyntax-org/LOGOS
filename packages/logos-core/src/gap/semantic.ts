@@ -120,15 +120,54 @@ function analyzeConceptualDrift(intent: string, expression: string): {
   overlap: number;
   recoverable: boolean;
 } {
-  const intentWords = new Set(intent.toLowerCase().split(/\s+/));
-  const exprWords = new Set(expression.toLowerCase().split(/\s+/));
+  const intentWords = new Set(intent.toLowerCase().split(/\s+/).filter(w => w.length > 0));
+  const exprWords = new Set(expression.toLowerCase().split(/\s+/).filter(w => w.length > 0));
 
+  // Count exact matches
   const intersection = new Set([...intentWords].filter(w => exprWords.has(w)));
-  const overlap = intersection.size / Math.max(intentWords.size, exprWords.size);
+  let overlapCount = intersection.size;
 
-  // Find key different words
-  const intentOnly = [...intentWords].filter(w => !exprWords.has(w)).slice(0, 2);
-  const exprOnly = [...exprWords].filter(w => !intentWords.has(w)).slice(0, 2);
+  // Count semantic matches from known synonyms
+  for (const intentWord of intentWords) {
+    if (!exprWords.has(intentWord) && KNOWN_SYNONYMS[intentWord]) {
+      for (const syn of KNOWN_SYNONYMS[intentWord]) {
+        if (exprWords.has(syn.word)) {
+          // Found a semantic match - count it as partial overlap based on similarity
+          overlapCount += syn.similarity;
+          break;
+        }
+      }
+    }
+  }
+
+  const overlap = overlapCount / Math.max(intentWords.size, exprWords.size);
+
+  const intentLower = intent.toLowerCase();
+  const exprLower = expression.toLowerCase();
+
+  // Check for semantic category shifts
+  const physicalWords = ['temperature', 'weight', 'size', 'speed', 'distance', 'volume'];
+  const evaluativeWords = ['approval', 'quality', 'value', 'importance', 'goodness'];
+  const domesticatedWords = ['domesticated', 'tame', 'pet', 'trained'];
+  const wildWords = ['wild', 'feral', 'untamed'];
+  const technicalWords = ['neural', 'algorithm', 'compute', 'technical'];
+  const colloquialWords = ['colloquial', 'casual', 'informal', 'everyday'];
+
+  if (physicalWords.some(w => intentLower.includes(w)) && evaluativeWords.some(w => exprLower.includes(w))) {
+    return { drift: 'physical → evaluative', overlap, recoverable: overlap > 0.3 };
+  }
+
+  if (domesticatedWords.some(w => intentLower.includes(w)) && wildWords.some(w => exprLower.includes(w))) {
+    return { drift: 'domesticated → wild', overlap, recoverable: overlap > 0.3 };
+  }
+
+  if (technicalWords.some(w => intentLower.includes(w)) && colloquialWords.some(w => exprLower.includes(w))) {
+    return { drift: 'technical → colloquial', overlap, recoverable: overlap > 0.3 };
+  }
+
+  // Find key different words (fallback)
+  const intentOnly = [...intentWords].filter(w => !exprWords.has(w) && w.length > 2).slice(0, 2);
+  const exprOnly = [...exprWords].filter(w => !intentWords.has(w) && w.length > 2).slice(0, 2);
 
   const drift = intentOnly.length > 0 && exprOnly.length > 0
     ? `${intentOnly.join(', ')} → ${exprOnly.join(', ')}`
@@ -146,16 +185,32 @@ function analyzeEmotionalShift(intent: string, expression: string): {
   shift: string;
   appropriate: boolean;
 } {
+  const intentLower = intent.toLowerCase();
+  const exprLower = expression.toLowerCase();
+
+  // Check for commitment → preference shift (love vs like)
+  if (intentLower.includes('love') && exprLower.includes('like')) {
+    return { shift: 'commitment → preference', appropriate: false };
+  }
+
+  // Check for deep understanding → surface acknowledgment
+  if (['understand', 'comprehend', 'grasp'].some(w => intentLower.includes(w)) &&
+      ['acknowledge', 'recognize'].some(w => exprLower.includes(w))) {
+    return { shift: 'understanding → acknowledgment', appropriate: false };
+  }
+
   // Simple heuristic based on emotional words
   const emotionalWords = {
     positive: ['love', 'joy', 'happy', 'comfort', 'support', 'help', 'care'],
+    mild: ['like', 'prefer', 'enjoy', 'appreciate'],
     negative: ['pain', 'grief', 'sad', 'suffer', 'hurt', 'loss'],
-    neutral: ['acknowledge', 'recognize', 'understand', 'see', 'know']
+    neutral: ['acknowledge', 'recognize', 'see', 'know']
   };
 
   const detectEmotion = (text: string): string => {
     const lower = text.toLowerCase();
     if (emotionalWords.positive.some(w => lower.includes(w))) return 'positive';
+    if (emotionalWords.mild.some(w => lower.includes(w))) return 'mild';
     if (emotionalWords.negative.some(w => lower.includes(w))) return 'negative';
     return 'neutral';
   };
@@ -434,6 +489,12 @@ export function detectSemanticGap(
   const emotional = analyzeEmotionalShift(intent, expression);
   const pragmatic = analyzePragmaticAlignment(intent, expression);
   const transformations = detectTransformations(intent, expression);
+
+  // Adjust distance based on sub-dimension analysis
+  // Inappropriate emotional shift increases distance (love→like, understand→acknowledge)
+  if (!emotional.appropriate) {
+    distance = Math.min(1.0, distance + 0.1);
+  }
 
   // Determine bridgeability
   const bridgeable = distance < 0.7 && conceptual.recoverable;
