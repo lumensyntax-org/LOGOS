@@ -21,3 +21,13 @@ export { LogosEngine } from './engine.js';
 
 // Integrations
 export { GeminiIntegration, type GeminiConfig } from './integration/gemini.js';
+
+// Cardioid Architecture - Heartbeat circulation pattern
+export * from './cardioid/types.js';
+export {
+  createMarianMemory,
+  ponder,
+  recallWisdom,
+  getReceptivityForGap,
+  isMatureMemory
+} from './cardioid/memory.js';
