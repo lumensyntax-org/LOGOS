@@ -18,3 +18,6 @@ export * from './gap/index.js';
 
 // Main verification engine
 export { LogosEngine } from './engine.js';
+
+// Integrations
+export { GeminiIntegration, type GeminiConfig } from './integration/gemini.js';

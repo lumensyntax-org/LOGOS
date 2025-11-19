@@ -40,5 +40,8 @@
     "logos",
     "truth"
   ],
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1"
+  }
 }
