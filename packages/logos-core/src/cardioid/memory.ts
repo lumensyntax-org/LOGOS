@@ -77,13 +77,21 @@ export function ponder(
   gap: GapResult,
   mediationMode: MediationMode
 ): MarianMemory {
+  // If no gap detected, still increment cycles but don't create experience
+  if (gap.dominantType === 'NONE') {
+    return {
+      ...memory,
+      cyclesCompleted: memory.cyclesCompleted + 1
+    };
+  }
+
   // Step 1: Distill wisdom from this experience
   const wisdom = distillWisdom(result, gap, mediationMode);
 
   // Step 2: Create pondered experience
   const experience: PonderedExperience = {
     gapPattern: {
-      type: gap.type,
+      type: gap.dominantType,
       characteristics: identifyCharacteristics(gap)
     },
     mediationSuccess: result.finalState !== 'blocked',
@@ -132,7 +140,7 @@ function distillWisdom(
   mode: MediationMode
 ): string {
   // Semantic gaps
-  if (gap.type === 'SEMANTIC') {
+  if (gap.dominantType === 'SEMANTIC') {
     if (result.finalState === 'redeemed') {
       return `Semantic gap bridged through ${mode}: ${gap.reason}. Meaning can be preserved through transformation.`;
     } else if (result.finalState === 'original') {
@@ -143,7 +151,7 @@ function distillWisdom(
   }
 
   // Factual gaps
-  if (gap.type === 'FACTUAL') {
+  if (gap.dominantType === 'FACTUAL') {
     if (result.finalState === 'original') {
       return `Factual alignment confirmed: truth preserved without correction needed.`;
     } else if (result.finalState === 'redeemed') {
@@ -154,7 +162,7 @@ function distillWisdom(
   }
 
   // Logical gaps
-  if (gap.type === 'LOGICAL') {
+  if (gap.dominantType === 'LOGICAL') {
     if (result.redemptionAttempted && result.finalState === 'redeemed') {
       return `Logical gap transformed: ${gap.reason}. Reasoning structure can be improved through resurrection.`;
     } else if (result.finalState === 'original') {
@@ -165,7 +173,7 @@ function distillWisdom(
   }
 
   // Ontological gaps
-  if (gap.type === 'ONTOLOGICAL') {
+  if (gap.dominantType === 'ONTOLOGICAL') {
     return `Ontological boundary recognized: ${gap.reason}. This gap cannot be mediated—it is a categorical impossibility for computational systems. Humility required.`;
   }
 
@@ -185,41 +193,38 @@ function identifyCharacteristics(gap: GapResult): string[] {
   const characteristics: string[] = [];
 
   // Semantic gap characteristics
-  if (gap.type === 'SEMANTIC' && gap.conceptual) {
-    if (gap.conceptual.drift.length > 0) {
+  if (gap.dominantType === 'SEMANTIC' && gap.semantic) {
+    if (gap.semantic.conceptual.drift) {
       characteristics.push('conceptual_drift');
-      // Add specific drift patterns
-      gap.conceptual.drift.forEach(drift => {
-        characteristics.push(`drift:${drift.replace(' → ', '_to_')}`);
-      });
+      characteristics.push(`drift:${gap.semantic.conceptual.drift.replace(' → ', '_to_')}`);
     }
-    if (gap.conceptual.transformations.length > 0) {
-      gap.conceptual.transformations.forEach(t => {
+    if (gap.semantic.transformations.length > 0) {
+      gap.semantic.transformations.forEach(t => {
         characteristics.push(`transformation:${t.type}`);
       });
     }
   }
 
   // Factual gap characteristics
-  if (gap.type === 'FACTUAL' && gap.verification) {
-    characteristics.push(`factual:${gap.verification.category}`);
-    if (gap.verification.category === 'contradictory') {
+  if (gap.dominantType === 'FACTUAL' && gap.factual) {
+    characteristics.push(`factual:${gap.factual.category}`);
+    if (gap.factual.category === 'contradictory') {
       characteristics.push('contradiction_detected');
     }
   }
 
   // Logical gap characteristics
-  if (gap.type === 'LOGICAL' && gap.inference) {
-    characteristics.push(`logical:${gap.inference.category}`);
-    gap.inference.fallacies.forEach(f => {
+  if (gap.dominantType === 'LOGICAL' && gap.logical) {
+    characteristics.push(`logical:${gap.logical.category}`);
+    gap.logical.fallacies.forEach(f => {
       characteristics.push(`fallacy:${f.type}`);
     });
   }
 
   // Ontological gap characteristics
-  if (gap.type === 'ONTOLOGICAL' && gap.boundary) {
-    characteristics.push(`ontological:${gap.boundary.category}`);
-    if (gap.boundary.category === 'categorical') {
+  if (gap.dominantType === 'ONTOLOGICAL' && gap.ontological) {
+    characteristics.push(`ontological:${gap.ontological.category}`);
+    if (gap.ontological.category === 'categorical') {
       characteristics.push('category_error');
     }
   }
@@ -269,18 +274,18 @@ function consolidateWisdom(
   for (const [key, group] of groups) {
     if (group.length === 1) {
       // Single experience—keep as is
-      consolidated.push(group[0]);
+      consolidated.push(group[0]!);
     } else if (group.length <= 3) {
       // Few experiences—keep all (not yet ready for deep integration)
       consolidated.push(...group);
     } else {
       // Multiple similar experiences—integrate into deeper wisdom
       const integrated: PonderedExperience = {
-        gapPattern: group[0].gapPattern,
+        gapPattern: group[0]!.gapPattern,
         mediationSuccess: group.filter(g => g.mediationSuccess).length > group.length / 2,
         wisdom: integrateWisdom(group),
-        timestamp: group[group.length - 1].timestamp, // Most recent
-        mediationMode: group[group.length - 1].mediationMode
+        timestamp: group[group.length - 1]!.timestamp, // Most recent
+        mediationMode: group[group.length - 1]!.mediationMode
       };
       consolidated.push(integrated);
     }
@@ -301,14 +306,14 @@ function consolidateWisdom(
  * @returns Integrated wisdom statement
  */
 function integrateWisdom(experiences: PonderedExperience[]): string {
-  const pattern = experiences[0].gapPattern.type;
+  const pattern = experiences[0]!.gapPattern.type;
   const successRate = experiences.filter(e => e.mediationSuccess).length / experiences.length;
-  const chars = experiences[0].gapPattern.characteristics;
+  const chars = experiences[0]!.gapPattern.characteristics;
 
   if (successRate > 0.7) {
-    return `${pattern} gaps with pattern [${chars.join(', ')}] are consistently mediable through ${experiences[0].mediationMode}. Pattern observed ${experiences.length} times. Confidence in this approach is high.`;
+    return `${pattern} gaps with pattern [${chars.join(', ')}] are consistently mediable through ${experiences[0]!.mediationMode}. Pattern observed ${experiences.length} times. Confidence in this approach is high.`;
   } else if (successRate < 0.3) {
-    return `${pattern} gaps with pattern [${chars.join(', ')}] consistently resist mediation via ${experiences[0].mediationMode}. Observed ${experiences.length} times. Alternative approaches required—current method insufficient.`;
+    return `${pattern} gaps with pattern [${chars.join(', ')}] consistently resist mediation via ${experiences[0]!.mediationMode}. Observed ${experiences.length} times. Alternative approaches required—current method insufficient.`;
   } else {
     return `${pattern} gaps with pattern [${chars.join(', ')}] show context-dependent mediation (${Math.round(successRate * 100)}% success). Observed ${experiences.length} times. Success varies—careful discernment required for each instance.`;
   }
@@ -343,7 +348,7 @@ function updateReceptivityDepth(
   const newDepth = { ...currentDepth };
 
   // Which dimension to update?
-  const dimension = gap.type.toLowerCase() as keyof typeof newDepth;
+  const dimension = gap.dominantType.toLowerCase() as keyof typeof newDepth;
 
   if (dimension !== 'overall') {
     if (experience.mediationSuccess) {
@@ -358,7 +363,7 @@ function updateReceptivityDepth(
 
   // Special case: Ontological dimension grows through RECOGNIZING boundaries
   // This is not about success—it's about wisdom to know what cannot be done
-  if (gap.type === 'ONTOLOGICAL') {
+  if (gap.dominantType === 'ONTOLOGICAL') {
     newDepth.ontological = Math.min(1.0, currentDepth.ontological + 0.1);
   }
 
@@ -434,7 +439,7 @@ export function recallWisdom(
 
   return memory.pondered.filter(exp => {
     // Must be same gap type
-    if (exp.gapPattern.type !== gap.type) {
+    if (exp.gapPattern.type !== gap.dominantType) {
       return false;
     }
 

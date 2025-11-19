@@ -103,7 +103,7 @@ function selectStrategy(gap: Gap, attemptNumber: number): string {
   const typeStrategies = strategies[gap.type] || ['Generic transformation'];
   const index = (attemptNumber - 1) % typeStrategies.length;
 
-  return typeStrategies[index];
+  return typeStrategies[index] || 'Generic transformation';
 }
 
 /**

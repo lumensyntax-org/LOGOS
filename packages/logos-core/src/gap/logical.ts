@@ -66,8 +66,8 @@ function detectAffirmingConsequent(premises: string[], conclusion: string): bool
 
   if (!match) return false;
 
-  const antecedent = match[1].toLowerCase().trim();
-  const consequent = match[2].toLowerCase().trim();
+  const antecedent = match[1]!.toLowerCase().trim();
+  const consequent = match[2]!.toLowerCase().trim();
 
   // Check other premises and conclusion
   const otherPremises = premises.filter(p => p !== ifThenPremise).map(p => p.toLowerCase());
@@ -163,7 +163,7 @@ function detectFallacies(premises: string[], conclusion: string): Array<{
   // Only flag if very high overlap AND mentions same entities circularly
   const hasCircularPattern =
     (combinedText.includes('bible') && combinedText.includes('god') && combinedText.includes('wrote')) ||
-    (overlap > premiseWords.size * 0.9 && premises.length === 1 && premises[0].length > 20);
+    (overlap > premiseWords.size * 0.9 && premises.length === 1 && premises[0]!.length > 20);
 
   if (hasCircularPattern) {
     fallacies.push({
@@ -281,12 +281,13 @@ function hasContradiction(premises: string[], conclusion: string): boolean {
       // Check if they're applied to the same subject
       const words = combinedLower.split(/\s+/);
       for (let i = 0; i < words.length - 2; i++) {
-        const subject = words[i];
+        const subject = words[i]!;
         // Check if subject has both opposite properties
-        const subjectContext = combinedLower.slice(
-          Math.max(0, combinedLower.indexOf(subject) - 50),
-          Math.min(combinedLower.length, combinedLower.indexOf(subject) + 100)
-        );
+        const subjectIndex = combinedLower.indexOf(subject);
+        const subjectContext = subjectIndex !== -1 ? combinedLower.slice(
+          Math.max(0, subjectIndex - 50),
+          Math.min(combinedLower.length, subjectIndex + 100)
+        ) : '';
 
         if (subjectContext.includes(term1) && subjectContext.includes(term2)) {
           return true;
@@ -320,8 +321,8 @@ function isModusPonens(premises: string[], conclusion: string): boolean {
 
   if (!match) return false;
 
-  const antecedent = match[1].toLowerCase().trim();
-  const consequent = match[2].toLowerCase().trim();
+  const antecedent = match[1]!.toLowerCase().trim();
+  const consequent = match[2]!.toLowerCase().trim();
 
   const otherPremises = premises.filter(p => p !== ifThenPremise).map(p => p.toLowerCase());
   const conclusionLower = conclusion.toLowerCase().replace(/therefore,?\s*/i, '').trim();
@@ -375,8 +376,8 @@ function isSyllogism(premises: string[], conclusion: string): boolean {
   const match = universalPremise.match(/all\s+(\w+)\s+are\s+(\w+)/i);
   if (!match) return false;
 
-  const category = match[1].toLowerCase();
-  const property = match[2].toLowerCase();
+  const category = match[1]!.toLowerCase();
+  const property = match[2]!.toLowerCase();
 
   const otherPremises = premises.filter(p => p !== universalPremise).map(p => p.toLowerCase());
   const conclusionLower = conclusion.toLowerCase().replace(/therefore,?\s*/i, '').trim();
@@ -410,7 +411,7 @@ function isTransitiveChain(premises: string[], conclusion: string): boolean {
   premises.forEach(p => {
     const match = p.match(/all\s+(\w+)\s+are\s+(\w+)/i) || p.match(/(\w+)\s+is\s+(\w+)/i);
     if (match) {
-      relationships.push([match[1].toLowerCase(), match[2].toLowerCase()]);
+      relationships.push([match[1]!.toLowerCase(), match[2]!.toLowerCase()]);
     }
   });
 
@@ -420,8 +421,8 @@ function isTransitiveChain(premises: string[], conclusion: string): boolean {
   const conclusionMatch = conclusion.match(/(\w+)\s+is\s+(\w+)/i);
   if (!conclusionMatch) return false;
 
-  const start = conclusionMatch[1].toLowerCase();
-  const end = conclusionMatch[2].toLowerCase();
+  const start = conclusionMatch[1]!.toLowerCase();
+  const end = conclusionMatch[2]!.toLowerCase();
 
   // BFS to find path from start to end
   const queue: string[] = [start];
@@ -464,7 +465,7 @@ function assessInference(
   const conclusionLower = conclusion.toLowerCase();
 
   // Check for tautology (A is A)
-  if (premises.length === 1 && premises[0].trim().toLowerCase() === conclusion.trim().toLowerCase()) {
+  if (premises.length === 1 && premises[0]!.trim().toLowerCase() === conclusion.trim().toLowerCase()) {
     return 'valid';
   }
 
@@ -566,7 +567,7 @@ function assessInference(
  */
 function calculateDistance(
   inference: 'valid' | 'weak' | 'invalid',
-  fallacies: Array<{ severity: string }>
+  fallacies: Array<{ type: string; severity: string }>
 ): number {
   let baseDistance = 0;
 

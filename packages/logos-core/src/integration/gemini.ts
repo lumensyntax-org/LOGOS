@@ -82,7 +82,7 @@ export class GeminiIntegration {
 
     // Check if we've hit the rate limit
     if (this.requestTimestamps.length >= this.config.maxRequestsPerMinute!) {
-      const oldestRequest = this.requestTimestamps[0];
+      const oldestRequest = this.requestTimestamps[0]!; // Safe: array length checked above
       const waitTime = 60000 - (now - oldestRequest);
 
       if (waitTime > 0) {

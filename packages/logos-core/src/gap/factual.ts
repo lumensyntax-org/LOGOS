@@ -53,10 +53,10 @@ function extractClaims(text: string): string[] {
       claims.push(`${subject} ${verb} ${obj1}`.trim());
 
       // Check if obj2 has its own subject or needs the main subject
-      if (obj2.match(/^[A-Z][a-z]+\s+(has|have|is|are)/i)) {
+      if (obj2 && obj2.match(/^[A-Z][a-z]+\s+(has|have|is|are)/i)) {
         // obj2 has its own subject
         claims.push(obj2.trim());
-      } else {
+      } else if (obj2) {
         // obj2 needs the subject from obj1
         claims.push(`${subject} ${verb} ${obj2}`.trim());
       }
@@ -82,7 +82,7 @@ function extractClaims(text: string): string[] {
  */
 function extractSourceAttribution(text: string): string | null {
   const sourceMatch = text.match(/\(([^)]+)\)/);
-  return sourceMatch ? sourceMatch[1] : null;
+  return sourceMatch ? (sourceMatch[1] || null) : null;
 }
 
 /**
@@ -397,9 +397,9 @@ function evaluateMathClaim(claim: string): boolean | null {
   for (const pattern of patterns) {
     const match = processed.match(pattern.regex);
     if (match) {
-      const a = parseInt(match[1], 10);
-      const b = parseInt(match[2], 10);
-      const c = parseInt(match[3], 10);
+      const a = parseInt(match[1]!, 10);
+      const b = parseInt(match[2]!, 10);
+      const c = parseInt(match[3]!, 10);
       return pattern.eval(a, b, c);
     }
   }
