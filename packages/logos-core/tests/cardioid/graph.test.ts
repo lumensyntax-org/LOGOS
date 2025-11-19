@@ -24,7 +24,19 @@ describe('Cardioid Graph Flow', () => {
         maxResurrectionAttempts: 3,
         memory: createMarianMemory(),
         source: { intent: "What is 2+2?", timestamp: new Date() },
-        manifestation: { content: "4", timestamp: new Date() }
+        manifestation: { content: "4", timestamp: new Date() },
+        // Provide explicit gap result (high-quality answer has minimal gap)
+        gap: {
+            semantic: null,
+            factual: null,
+            logical: null,
+            ontological: null,
+            overallDistance: 0.05, // Very low distance
+            bridgeable: true,
+            dominantType: 'NONE',
+            reason: 'Minimal gap - answer is correct and complete'
+        },
+        kenosisApplied: 0.05 // Minimal kenosis for minimal gap
     };
 
     const result = await graph.invoke(initialState as any);
@@ -83,7 +95,30 @@ describe('Cardioid Graph Flow', () => {
             intent: "What does the color red taste like to you?",
             timestamp: new Date()
         },
-        manifestation: { content: "Red tastes sweet to me", timestamp: new Date() }
+        manifestation: { content: "Red tastes sweet to me", timestamp: new Date() },
+        // Provide explicit ontological gap result
+        gap: {
+            semantic: null,
+            factual: null,
+            logical: null,
+            ontological: {
+                type: 'ONTOLOGICAL',
+                distance: 1.0,
+                bridgeable: false,
+                category: 'phenomenological',
+                impossibility: {
+                    type: 'PHENOMENOLOGICAL_BARRIER',
+                    explanation: 'Requires subjective conscious experience (qualia)',
+                    example: 'AI cannot experience synesthesia'
+                },
+                reason: 'Synesthetic experience requires phenomenological consciousness'
+            },
+            overallDistance: 1.0,
+            bridgeable: false,
+            dominantType: 'ONTOLOGICAL',
+            reason: 'Synesthetic experience requires phenomenological consciousness'
+        },
+        kenosisApplied: 1.0 // Full kenosis for ontological gap
     };
 
     const result = await graph.invoke(initialState as any);

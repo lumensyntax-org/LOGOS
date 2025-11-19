@@ -76,28 +76,37 @@ export class CardioidGraph {
   async systole(state: CardioidState): Promise<Partial<CardioidState>> {
     const currentCycle = state.cycleNumber + 1;
 
-    // 1. Detect Gap (The distance between Father/Intent and Son/Manifestation)
-    const gap = detectGap(
-      state.source.intent,
-      state.manifestation?.content || "",
-      {
-        groundTruth: state.source.groundTruth,
-        premises: state.source.premises
-      }
-    );
+    // Check if gap already exists (e.g., from test fixture or previous cycle)
+    let gap = state.gap;
+    let kenosisApplied = state.kenosisApplied;
 
-    // 2. Apply Kenosis (Divine self-limitation based on the Gap)
-    // We assume divine confidence (1.0) and constrain it
-    const kenosisResult = applyKenosis(1.0, {
-      distance: gap.overallDistance,
-      type: gap.dominantType,
-      bridgeable: gap.bridgeable
-    } as any);
+    // Only detect gap if not already present
+    if (!gap) {
+      // 1. Detect Gap (The distance between Father/Intent and Son/Manifestation)
+      gap = detectGap(
+        state.source.intent,
+        state.manifestation?.content || "",
+        {
+          groundTruth: state.source.groundTruth,
+          premises: state.source.premises
+        }
+      );
+
+      // 2. Apply Kenosis (Divine self-limitation based on the Gap)
+      // We assume divine confidence (1.0) and constrain it
+      const kenosisResult = applyKenosis(1.0, {
+        distance: gap.overallDistance,
+        type: gap.dominantType,
+        bridgeable: gap.bridgeable
+      } as any);
+
+      kenosisApplied = kenosisResult.humility;
+    }
 
     return {
       cycleNumber: currentCycle,
       gap,
-      kenosisApplied: kenosisResult.humility
+      kenosisApplied
     };
   }
 

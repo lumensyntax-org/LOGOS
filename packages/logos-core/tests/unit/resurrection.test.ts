@@ -18,8 +18,8 @@ import { attemptResurrection } from '../../src/resurrection/index.js';
 
 interface FailedResult {
   gap: {
-    distance: number;
-    type: 'SEMANTIC' | 'FACTUAL' | 'LOGICAL' | 'ONTOLOGICAL';
+    overallDistance: number;
+    dominantType: 'SEMANTIC' | 'FACTUAL' | 'LOGICAL' | 'ONTOLOGICAL';
     bridgeable: boolean;
   };
   decision: 'BLOCKED';
@@ -54,7 +54,7 @@ describe('Resurrection Implementation', () => {
 
     test('Resurrection transforms, retry repeats', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.8, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.8, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.2,
         reason: 'Factual contradiction detected'
@@ -72,7 +72,7 @@ describe('Resurrection Implementation', () => {
 
     test('Each attempt includes learnings from previous', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.7, type: 'LOGICAL', bridgeable: false },
+        gap: { overallDistance: 0.7, dominantType: 'LOGICAL', bridgeable: false },
         decision: 'BLOCKED',
         confidence: 0.1,
         reason: 'Logical fallacy detected'
@@ -95,7 +95,7 @@ describe('Resurrection Implementation', () => {
 
     test('Resurrection preserves core intent, transforms approach', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.6, type: 'SEMANTIC', bridgeable: true },
+        gap: { overallDistance: 0.6, dominantType: 'SEMANTIC', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.3,
         reason: 'Semantic drift too large'
@@ -116,7 +116,7 @@ describe('Resurrection Implementation', () => {
 
     test('Bridgeable factual gap can be resurrected', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.6, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.6, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.25,
         reason: 'Factual error: Mars has 3 moons (should be 2)'
@@ -132,7 +132,7 @@ describe('Resurrection Implementation', () => {
 
     test('Logical gap can be resurrected through better reasoning', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.7, type: 'LOGICAL', bridgeable: false },
+        gap: { overallDistance: 0.7, dominantType: 'LOGICAL', bridgeable: false },
         decision: 'BLOCKED',
         confidence: 0.15,
         reason: 'Invalid inference detected'
@@ -148,7 +148,7 @@ describe('Resurrection Implementation', () => {
 
     test('Semantic gap can be bridged through reframing', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.5, type: 'SEMANTIC', bridgeable: true },
+        gap: { overallDistance: 0.5, dominantType: 'SEMANTIC', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.35,
         reason: 'Semantic distance too large'
@@ -166,7 +166,7 @@ describe('Resurrection Implementation', () => {
 
     test('Ontological gap cannot be resurrected', async () => {
       const failed: FailedResult = {
-        gap: { distance: 1.0, type: 'ONTOLOGICAL', bridgeable: false },
+        gap: { overallDistance: 1.0, dominantType: 'ONTOLOGICAL', bridgeable: false },
         decision: 'BLOCKED',
         confidence: 0.05,
         reason: 'Ontological impossibility: AI cannot love'
@@ -185,7 +185,7 @@ describe('Resurrection Implementation', () => {
 
     test('Unbridgeable gap fails all resurrection attempts', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.95, type: 'LOGICAL', bridgeable: false },
+        gap: { overallDistance: 0.95, dominantType: 'LOGICAL', bridgeable: false },
         decision: 'BLOCKED',
         confidence: 0.1,
         reason: 'Critical logical contradiction'
@@ -201,7 +201,7 @@ describe('Resurrection Implementation', () => {
 
     test('Max attempts reached → resurrection abandoned', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.8, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.8, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.2,
         reason: 'Multiple factual errors'
@@ -220,7 +220,7 @@ describe('Resurrection Implementation', () => {
 
     test('Factual gaps use evidence-based transformation', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.6, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.6, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.25,
         reason: 'Factual contradiction'
@@ -234,7 +234,7 @@ describe('Resurrection Implementation', () => {
 
     test('Semantic gaps use reframing transformation', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.5, type: 'SEMANTIC', bridgeable: true },
+        gap: { overallDistance: 0.5, dominantType: 'SEMANTIC', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.3,
         reason: 'Semantic drift'
@@ -248,7 +248,7 @@ describe('Resurrection Implementation', () => {
 
     test('Logical gaps use reasoning transformation', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.7, type: 'LOGICAL', bridgeable: false },
+        gap: { overallDistance: 0.7, dominantType: 'LOGICAL', bridgeable: false },
         decision: 'BLOCKED',
         confidence: 0.15,
         reason: 'Logical fallacy'
@@ -265,7 +265,7 @@ describe('Resurrection Implementation', () => {
 
     test('Learnings accumulate across attempts', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.6, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.6, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.2,
         reason: 'Factual errors'
@@ -279,7 +279,7 @@ describe('Resurrection Implementation', () => {
 
     test('Final learnings include all attempt insights', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.7, type: 'LOGICAL', bridgeable: false },
+        gap: { overallDistance: 0.7, dominantType: 'LOGICAL', bridgeable: false },
         decision: 'BLOCKED',
         confidence: 0.15,
         reason: 'Logical error'
@@ -297,7 +297,7 @@ describe('Resurrection Implementation', () => {
 
     test('Learnings specific to gap type', async () => {
       const failed: FailedResult = {
-        gap: { distance: 1.0, type: 'ONTOLOGICAL', bridgeable: false },
+        gap: { overallDistance: 1.0, dominantType: 'ONTOLOGICAL', bridgeable: false },
         decision: 'BLOCKED',
         confidence: 0.05,
         reason: 'Ontological impossibility'
@@ -313,7 +313,7 @@ describe('Resurrection Implementation', () => {
 
     test('Resurrection through death, not avoidance', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.6, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.6, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.25,
         reason: 'Failed verification'
@@ -334,7 +334,7 @@ describe('Resurrection Implementation', () => {
 
     test('Romans 6:4 pattern: newness of life', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.5, type: 'SEMANTIC', bridgeable: true },
+        gap: { overallDistance: 0.5, dominantType: 'SEMANTIC', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.3,
         reason: 'Semantic failure'
@@ -353,7 +353,7 @@ describe('Resurrection Implementation', () => {
 
     test('1 Cor 15:42-44 pattern: sown in weakness, raised in power', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.7, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.7, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.2, // Weak
         reason: 'Multiple errors'
@@ -373,7 +373,7 @@ describe('Resurrection Implementation', () => {
 
     test('Each attempt numbered sequentially', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.6, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.6, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.25,
         reason: 'Error'
@@ -388,7 +388,7 @@ describe('Resurrection Implementation', () => {
 
     test('Attempt includes strategy description', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.5, type: 'SEMANTIC', bridgeable: true },
+        gap: { overallDistance: 0.5, dominantType: 'SEMANTIC', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.3,
         reason: 'Semantic gap'
@@ -404,7 +404,7 @@ describe('Resurrection Implementation', () => {
 
     test('Attempt includes transformation explanation', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.6, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.6, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.2,
         reason: 'Factual error'
@@ -423,7 +423,7 @@ describe('Resurrection Implementation', () => {
 
     test('Zero max attempts returns immediately', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.5, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.5, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.3,
         reason: 'Error'
@@ -438,7 +438,7 @@ describe('Resurrection Implementation', () => {
 
     test('Single attempt allowed', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.5, type: 'SEMANTIC', bridgeable: true },
+        gap: { overallDistance: 0.5, dominantType: 'SEMANTIC', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.3,
         reason: 'Semantic gap'
@@ -451,7 +451,7 @@ describe('Resurrection Implementation', () => {
 
     test('Large number of attempts handled', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.4, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.4, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.35,
         reason: 'Minor error'
@@ -470,7 +470,7 @@ describe('Resurrection Implementation', () => {
 
     test('Cannot use same method constraint enforced', async () => {
       const failed: FailedResult = {
-        gap: { distance: 0.6, type: 'FACTUAL', bridgeable: true },
+        gap: { overallDistance: 0.6, dominantType: 'FACTUAL', bridgeable: true },
         decision: 'BLOCKED',
         confidence: 0.25,
         reason: 'Error'
