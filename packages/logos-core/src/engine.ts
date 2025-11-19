@@ -24,9 +24,32 @@ import type {
   Evidence
 } from './types.js';
 
-import { detectGap } from './gap/index.js';
+import { detectGap, type GapResult } from './gap/index.js';
 import { applyKenosis } from './kenosis/index.js';
 import { attemptResurrection } from './resurrection/index.js';
+
+/**
+ * TRUTHSYNTAX: Aggregate verification signals into confidence score
+ *
+ * This is the "body" - the empirical, mathematical foundation of confidence.
+ * Calculates weighted average of all signals to produce raw confidence.
+ *
+ * THEOLOGICAL NOTE:
+ * This function represents TruthSyntax (the body): measurable, empirical evidence.
+ * LOGOS then applies Kenosis (the soul) to moderate this confidence through
+ * divine self-limitation.
+ *
+ * @param signals - Array of verification signals with values and weights
+ * @returns Raw confidence score [0-1] based on signal aggregation
+ */
+export function aggregateSignals(signals: Signal[]): number {
+  if (signals.length === 0) return 0;
+
+  const weightedSum = signals.reduce((sum, s) => sum + (s.value * s.weight), 0);
+  const totalWeight = signals.reduce((sum, s) => sum + s.weight, 0);
+
+  return totalWeight > 0 ? weightedSum / totalWeight : 0;
+}
 
 /**
  * Default LOGOS configuration
@@ -147,10 +170,8 @@ export class LogosEngine {
    * Create Verifier from signals
    */
   private createVerifier(signals: Signal[]): Verifier {
-    // Calculate base confidence from signals
-    const weightedSum = signals.reduce((sum, s) => sum + (s.value * s.weight), 0);
-    const totalWeight = signals.reduce((sum, s) => sum + s.weight, 0);
-    const rawScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
+    // Calculate base confidence from signals using TruthSyntax aggregation
+    const rawScore = aggregateSignals(signals);
     
     // Convert to 0-1 range (signals are -1 to 1)
     const confidence = (rawScore + 1) / 2;
@@ -217,7 +238,7 @@ export class LogosEngine {
    * Perform sacramental checkpoints
    */
   private async performSacramentalChecks(
-    gap: any
+    gap: GapResult
   ): Promise<SacramentalCheckpoint[]> {
     const checkpoints: SacramentalCheckpoint[] = [];
     
@@ -225,17 +246,17 @@ export class LogosEngine {
     checkpoints.push({
       sacrament: 'eucharist',
       required: true,
-      passed: gap.distance.overall < 0.5,
+      passed: gap.overallDistance < 0.5,
       timestamp: new Date(),
       evidence: []
     });
     
-    // Reconciliation - error correction (if gap is large)
-    if (gap.mediation.type === 'correction' || gap.mediation.type === 'redemption') {
+    // Reconciliation - error correction (if gap is large and unbridgeable)
+    if (!gap.bridgeable && gap.overallDistance > 0.5) {
       checkpoints.push({
         sacrament: 'reconciliation',
         required: true,
-        passed: gap.mediation.resurrectionNeeded,
+        passed: false, // Needs resurrection
         timestamp: new Date(),
         evidence: []
       });

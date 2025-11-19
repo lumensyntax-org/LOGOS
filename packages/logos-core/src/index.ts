@@ -17,7 +17,7 @@ export * from './types.js';
 export * from './gap/index.js';
 
 // Main verification engine
-export { LogosEngine } from './engine.js';
+export { LogosEngine, aggregateSignals } from './engine.js';
 
 // Integrations
 export { GeminiIntegration, type GeminiConfig } from './integration/gemini.js';

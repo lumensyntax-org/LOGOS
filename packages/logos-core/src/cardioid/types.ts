@@ -17,7 +17,7 @@
  * - Memory is Marian receptivity (pondering in heart)
  */
 
-import type { Source, Manifestation, ChristologicalResult } from '../types.js';
+import type { Source, Manifestation, ChristologicalResult, Signal } from '../types.js';
 import type { GapResult } from '../gap/index.js';
 
 /**
@@ -181,6 +181,19 @@ export interface CardioidState {
   /** DIASTOLE: Source and its manifestation */
   source: Source;
   manifestation: Manifestation | null;
+
+  /**
+   * VERIFICATION SIGNALS (TruthSyntax - The Body)
+   *
+   * These are the raw verification signals that provide the empirical
+   * foundation for confidence. TruthSyntax aggregates these to produce
+   * raw confidence, then LOGOS applies Kenosis to moderate it.
+   *
+   * THEOLOGICAL NOTE:
+   * Signals = The Body (empirical evidence, measurable)
+   * Kenosis = The Soul (divine restraint, immeasurable)
+   */
+  signals: Signal[] | null;
 
   /** SYSTOLE: Gap detection and kenosis */
   gap: GapResult | null;

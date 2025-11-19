@@ -23,6 +23,7 @@ import { applyKenosis } from "../kenosis/index.js";
 import { ponder } from "./memory.js";
 import { attemptResurrection } from "../resurrection/index.js";
 import { GeminiIntegration } from "../integration/gemini.js";
+import { aggregateSignals } from "../engine.js";
 
 // Define State Channels
 // In LangGraph, we define how each part of the state is updated (reducer).
@@ -35,6 +36,7 @@ const graphChannels = {
   maxCycles: { reducer: (x: number, y: number) => y },
   source: { reducer: (x: any, y: any) => y },
   manifestation: { reducer: (x: any, y: any) => y },
+  signals: { reducer: (x: any, y: any) => y }, // Verification signals (TruthSyntax)
   gap: { reducer: (x: any, y: any) => y },
   kenosisApplied: { reducer: (x: number, y: number) => y },
   cuspDecision: { reducer: (x: any, y: any) => y },
@@ -92,9 +94,15 @@ export class CardioidGraph {
         }
       );
 
-      // 2. Apply Kenosis (Divine self-limitation based on the Gap)
-      // We assume divine confidence (1.0) and constrain it
-      const kenosisResult = applyKenosis(1.0, {
+      // 2. Calculate raw confidence from verification signals (TruthSyntax - The Body)
+      // If no signals provided, default to divine confidence (1.0)
+      const rawConfidence = state.signals && state.signals.length > 0
+        ? aggregateSignals(state.signals)
+        : 1.0;
+
+      // 3. Apply Kenosis (Divine self-limitation based on the Gap)
+      // LOGOS (The Soul) moderates TruthSyntax (The Body)
+      const kenosisResult = applyKenosis(rawConfidence, {
         distance: gap.overallDistance,
         type: gap.dominantType,
         bridgeable: gap.bridgeable

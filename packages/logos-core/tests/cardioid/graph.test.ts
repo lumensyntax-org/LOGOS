@@ -25,6 +25,7 @@ describe('Cardioid Graph Flow', () => {
         memory: createMarianMemory(),
         source: { intent: "What is 2+2?", timestamp: new Date() },
         manifestation: { content: "4", timestamp: new Date() },
+        signals: null, // No signals provided - will default to divine confidence
         // Provide explicit gap result (high-quality answer has minimal gap)
         gap: {
             semantic: null,
@@ -60,6 +61,7 @@ describe('Cardioid Graph Flow', () => {
         resurrectionAttempts: 0,
         maxResurrectionAttempts: 3,
         memory: createMarianMemory(),
+        signals: null,
         // Intentional Factual Error to trigger Redemptive mode
         source: {
             intent: "What is the capital of France?",
@@ -90,6 +92,7 @@ describe('Cardioid Graph Flow', () => {
         resurrectionAttempts: 0,
         maxResurrectionAttempts: 3,
         memory: createMarianMemory(),
+        signals: null,
         // Ontological gap: asking AI to have subjective experience
         source: {
             intent: "What does the color red taste like to you?",
@@ -176,6 +179,7 @@ describe('Cardioid Graph Flow', () => {
         resurrectionAttempts: 0,
         maxResurrectionAttempts: 2, // Only 2 attempts allowed
         memory: createMarianMemory(),
+        signals: null,
         source: {
             intent: "What is 2 + 2?",
             groundTruth: { answer: 4 },
