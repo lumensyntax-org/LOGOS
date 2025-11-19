@@ -33,3 +33,4 @@ export {
 } from './cardioid/memory.js';
 export { heartbeat, type HeartbeatConfig, type HeartbeatResult } from './cardioid/heartbeat.js';
 export { circulate, circulateContinuously } from './cardioid/circulate.js';
+export { CardioidGraph } from './cardioid/graph.js';

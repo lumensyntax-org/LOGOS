@@ -309,5 +309,50 @@ Return ONLY this exact JSON format with no additional text:
       generationConfig: this.config.generationConfig,
     });
   }
+
+  /**
+   * Transform content for resurrection
+   *
+   * This method uses Gemini to intelligently transform failed content
+   * based on the identified gap and transformation strategy.
+   *
+   * THEOLOGICAL NOTE:
+   * Resurrection is not retry—it's transformation through death.
+   * The content must be fundamentally changed, not merely adjusted.
+   *
+   * @param originalContent - The failed manifestation content
+   * @param transformationStrategy - Strategy for transformation
+   * @returns Transformed content or fallback to original
+   */
+  async transformContent(
+    originalContent: string,
+    transformationStrategy: string
+  ): Promise<string> {
+    await this.checkRateLimit();
+
+    const prompt = `You are a transformation system for the LOGOS verification engine.
+
+TASK: Transform the following content based on this strategy: "${transformationStrategy}".
+Maintain the core intent but fix the identified gap.
+
+ORIGINAL CONTENT: "${originalContent}"
+
+INSTRUCTIONS:
+- Do NOT simply rephrase—fundamentally address the underlying issue
+- Preserve theological integrity if present
+- Return ONLY the transformed content, no explanation
+
+TRANSFORMED CONTENT:`;
+
+    try {
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      return response.text().trim();
+    } catch (error) {
+      console.error('Transformation failed:', error instanceof Error ? error.message : String(error));
+      // Fallback: return original if transformation fails
+      return originalContent;
+    }
+  }
 }
 

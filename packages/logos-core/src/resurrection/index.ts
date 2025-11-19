@@ -48,7 +48,7 @@ function extractLearnings(failed: FailedResult, attemptNumber: number): string[]
   const learnings: string[] = [];
 
   // Learn from gap type
-  learnings.push(`Gap type is ${failed.gap.type}, distance ${failed.gap.distance.toFixed(2)}`);
+  learnings.push(`Gap type is ${failed.gap.dominantType}, distance ${failed.gap.overallDistance.toFixed(2)}`);
 
   // Learn from bridgeability
   if (!failed.gap.bridgeable) {
@@ -56,7 +56,7 @@ function extractLearnings(failed: FailedResult, attemptNumber: number): string[]
   }
 
   // Learn from ontological gaps
-  if (failed.gap.type === 'ONTOLOGICAL') {
+  if (failed.gap.dominantType === 'ONTOLOGICAL') {
     learnings.push('Ontological impossibility detected - categorical boundary cannot be crossed');
   }
 
@@ -100,7 +100,7 @@ function selectStrategy(gap: Gap, attemptNumber: number): string {
     ]
   };
 
-  const typeStrategies = strategies[gap.type] || ['Generic transformation'];
+  const typeStrategies = strategies[gap.dominantType] || ['Generic transformation'];
   const index = (attemptNumber - 1) % typeStrategies.length;
 
   return typeStrategies[index] || 'Generic transformation';
@@ -121,7 +121,7 @@ function applyTransformation(
   transformation: string;
 } {
   // Ontological gaps cannot be transformed
-  if (gap.type === 'ONTOLOGICAL') {
+  if (gap.dominantType === 'ONTOLOGICAL') {
     return {
       success: false,
       transformation: 'Attempted transformation but ontological barrier remains'
@@ -137,11 +137,11 @@ function applyTransformation(
   }
 
   // Success probability decreases with distance
-  const successProbability = 1 - gap.distance;
+  const successProbability = 1 - gap.overallDistance;
   const success = Math.random() < successProbability;
 
   const transformation = success
-    ? `Successfully applied "${strategy}" to bridge ${gap.type} gap`
+    ? `Successfully applied "${strategy}" to bridge ${gap.dominantType} gap`
     : `Attempted "${strategy}" but gap remains`;
 
   return { success, transformation };
@@ -223,13 +223,13 @@ export async function attemptResurrection(
     }
 
     // Ontological gaps cannot be resurrected
-    if (failed.gap.type === 'ONTOLOGICAL') {
+    if (failed.gap.dominantType === 'ONTOLOGICAL') {
       allLearnings.push('Ontological gaps are categorical impossibilities - cannot be resurrected');
       break;
     }
 
     // Unbridgeable gaps with high distance are unlikely to resurrect
-    if (!failed.gap.bridgeable && failed.gap.distance > 0.9) {
+    if (!failed.gap.bridgeable && failed.gap.overallDistance > 0.9) {
       allLearnings.push('Gap is unbridgeable with distance > 0.9 - resurrection not possible');
       break;
     }
