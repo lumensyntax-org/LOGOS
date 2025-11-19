@@ -24,9 +24,9 @@ import type {
   Evidence
 } from './types.js';
 
-import { detectGap } from './gap/detector.js';
-import { applyKenosis, kenosisPermitsMediation } from './gap/kenosis.js';
-import { attemptResurrection } from './gap/resurrection.js';
+import { detectGap } from './gap/index.js';
+import { applyKenosis } from './kenosis/index.js';
+import { attemptResurrection } from './resurrection/index.js';
 
 /**
  * Default LOGOS configuration
@@ -62,19 +62,36 @@ export class LogosEngine {
     manifestation: Manifestation,
     signals: Signal[]
   ): Promise<ChristologicalResult> {
-    
+
     // Step 1: Create the Verifier (Spirit's presence)
     const verifier = this.createVerifier(signals);
-    
+
     // Step 2: Detect the Gap (identify the mediating space)
-    const gap = detectGap(source, manifestation, verifier);
-    
+    // Extract string values and options from Source/Manifestation objects
+    const intent = source.intent;
+    const expression = manifestation.content;
+    const options = {
+      groundTruth: source.groundTruth,
+      premises: source.premises
+    };
+
+    const gap = detectGap(intent, expression, options);
+
     // Step 3: Apply Kenosis (divine self-limitation)
     const rawConfidence = verifier.confidence;
-    const adjustedConfidence = applyKenosis(rawConfidence, gap.distance);
-    
-    // Step 4: Check if mediation is possible
-    if (!kenosisPermitsMediation(gap.mediation)) {
+
+    // Convert gap to simple format for kenosis
+    const simpleGap = {
+      distance: gap.overallDistance,
+      type: gap.dominantType,
+      bridgeable: gap.bridgeable
+    };
+
+    const kenosisResult = applyKenosis(rawConfidence, simpleGap);
+    const adjustedConfidence = kenosisResult.limited;
+
+    // Step 4: Check if mediation is possible (large unbridgeable gaps block)
+    if (!gap.bridgeable && gap.overallDistance > 0.8) {
       return this.createBlockedResult(gap, "Gap too large for mediation");
     }
     
@@ -92,8 +109,15 @@ export class LogosEngine {
     let redemptionAttempted = false;
     
     if (decision === 'BLOCK' && this.config.policy.redemptiveMode) {
+      const failedResult = {
+        gap: simpleGap,
+        decision: 'BLOCKED' as const,
+        confidence: smoothedConfidence,
+        reason: gap.reason
+      };
+
       const resurrection = await attemptResurrection(
-        gap, 
+        failedResult,
         this.config.policy.maxResurrectionAttempts
       );
       

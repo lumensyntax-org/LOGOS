@@ -48,16 +48,22 @@ function detectAffirmingConsequent(premises: string[], conclusion: string): bool
   // Pattern: "If A then B" + "B" → "A" (INVALID)
   // vs "If A then B" + "A" → "B" (VALID modus ponens)
 
-  // Match both "if...then..." and "if..., ..." patterns
-  const hasIfThen = premises.some(p => /if\s+.+[,\s]+(?:then\s+)?.+/i.test(p));
-  if (!hasIfThen) return false;
+  // Match "if...then...", "if..., ...", and "X implies Y" patterns
+  let ifThenPremise = premises.find(p => /if\s+.+[,\s]+(?:then\s+)?.+/i.test(p));
+  let match: RegExpMatchArray | null = null;
 
-  // Find the if-then premise
-  const ifThenPremise = premises.find(p => /if\s+.+[,\s]+(?:then\s+)?.+/i.test(p));
-  if (!ifThenPremise) return false;
+  if (ifThenPremise) {
+    // Extract antecedent and consequent (handles both "then" and comma)
+    match = ifThenPremise.match(/if\s+(.+?)\s*(?:then|,)\s*(.+)/i);
+  } else {
+    // Try "X implies Y" pattern
+    ifThenPremise = premises.find(p => /(.+)\s+implies?\s+(.+)/i.test(p));
+    if (ifThenPremise) {
+      // Match "X implies Y" with better word boundary handling
+      match = ifThenPremise.match(/^(.+?)\s+implies?\s+(.+?)$/i);
+    }
+  }
 
-  // Extract antecedent and consequent (handles both "then" and comma)
-  const match = ifThenPremise.match(/if\s+(.+?)\s*(?:then|,)\s*(.+)/i);
   if (!match) return false;
 
   const antecedent = match[1].toLowerCase().trim();
@@ -143,8 +149,15 @@ function detectFallacies(premises: string[], conclusion: string): Array<{
   }
 
   // Detect circular reasoning (but not for syllogisms)
-  const premiseWords = new Set(premises.join(' ').toLowerCase().split(/\s+/));
-  const conclusionWords = new Set(conclusion.toLowerCase().split(/\s+/));
+  // Filter out stopwords for better overlap calculation
+  const stopwords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'to', 'of', 'for', 'in', 'on', 'at', 'by', 'with', 'from', 'as', 'that', 'this', 'it']);
+
+  const premiseWords = new Set(
+    premises.join(' ').toLowerCase().split(/\s+/).filter(w => w.length > 2 && !stopwords.has(w))
+  );
+  const conclusionWords = new Set(
+    conclusion.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !stopwords.has(w))
+  );
   const overlap = [...premiseWords].filter(w => conclusionWords.has(w)).length;
 
   // Only flag if very high overlap AND mentions same entities circularly
@@ -161,9 +174,15 @@ function detectFallacies(premises: string[], conclusion: string): Array<{
   }
 
   // Detect non sequitur (premises unrelated to conclusion)
-  // But exclude theological reasoning with citations
+  // But exclude theological reasoning with citations and formal logical structures (syllogisms)
   const hasTheologicalCitation = /\(?\d*\s*\w+\s*\d+:\d+\)?/i.test(combinedText);
-  if (overlap < premiseWords.size * 0.1 && premises.length > 0 && premiseWords.size > 2 && !hasTheologicalCitation) {
+  const hasSyllogisticStructure =
+    /all\s+\w+\s+are\s+\w+/i.test(combinedText) ||
+    /most\s+\w+\s+are\s+\w+/i.test(combinedText) ||
+    /if\s+.+[,\s]+(?:then\s+)?.+/i.test(combinedText) ||
+    /\s+implies?\s+/i.test(combinedText);
+
+  if (overlap < premiseWords.size * 0.1 && premises.length > 0 && premiseWords.size >= 1 && !hasTheologicalCitation && !hasSyllogisticStructure) {
     fallacies.push({
       type: 'non_sequitur',
       description: 'Conclusion does not follow from premises',
@@ -234,6 +253,27 @@ function hasContradiction(premises: string[], conclusion: string): boolean {
     return true;
   }
 
+  // Check for explicit negation patterns: "X is true" vs "NOT X is true"
+  // Extract statements from premises and conclusion
+  const premiseText = premises.join(' ').toLowerCase();
+  const conclusionLower = conclusion.toLowerCase().replace(/therefore,?\s*/i, '').trim();
+
+  // Pattern: premise has "X is Y", conclusion has "not X is Y" or "X is not Y"
+  const affirmativeMatch = premiseText.match(/(\w+)\s+is\s+(\w+)/);
+  if (affirmativeMatch) {
+    const subject = affirmativeMatch[1];
+    const predicate = affirmativeMatch[2];
+
+    // Check for "NOT subject" or "subject is NOT predicate"
+    if (
+      conclusionLower.includes(`not ${subject}`) ||
+      conclusionLower.includes(`${subject} is not ${predicate}`) ||
+      conclusionLower.includes(`${subject} isn't ${predicate}`)
+    ) {
+      return true;
+    }
+  }
+
   // Check for opposite terms
   for (const [term1, term2] of opposites) {
     const hasBoth = combinedLower.includes(term1) && combinedLower.includes(term2);
@@ -262,12 +302,22 @@ function hasContradiction(premises: string[], conclusion: string): boolean {
  * Check for valid modus ponens (If A then B, A, therefore B)
  */
 function isModusPonens(premises: string[], conclusion: string): boolean {
-  // Match both "if...then..." and "if..., ..." patterns
-  const ifThenPremise = premises.find(p => /if\s+.+[,\s]+(?:then\s+)?.+/i.test(p));
-  if (!ifThenPremise) return false;
+  // Match "if...then...", "if..., ...", and "X implies Y" patterns
+  let ifThenPremise = premises.find(p => /if\s+.+[,\s]+(?:then\s+)?.+/i.test(p));
+  let match: RegExpMatchArray | null = null;
 
-  // Extract antecedent and consequent (handles both "then" and comma)
-  const match = ifThenPremise.match(/if\s+(.+?)\s*(?:then|,)\s*(.+)/i);
+  if (ifThenPremise) {
+    // Extract antecedent and consequent (handles both "then" and comma)
+    match = ifThenPremise.match(/if\s+(.+?)\s*(?:then|,)\s*(.+)/i);
+  } else {
+    // Try "X implies Y" pattern
+    ifThenPremise = premises.find(p => /(.+)\s+implies?\s+(.+)/i.test(p));
+    if (ifThenPremise) {
+      // Match "X implies Y" with better word boundary handling
+      match = ifThenPremise.match(/^(.+?)\s+implies?\s+(.+?)$/i);
+    }
+  }
+
   if (!match) return false;
 
   const antecedent = match[1].toLowerCase().trim();
@@ -290,9 +340,9 @@ function isModusPonens(premises: string[], conclusion: string): boolean {
   // Modus ponens: antecedent is asserted, consequent is concluded
   // Check if any premise asserts the antecedent (with some flexibility for conjugations)
   const assertsAntecedent = otherPremises.some(p => {
-    // Extract key words from antecedent (skip stop words)
+    // Extract key words from antecedent (skip stop words, but keep single letters as logical variables)
     const antecedentWords = antecedent.split(/\s+/).filter(w =>
-      w.length > 2 && !['the', 'and', 'or', 'not'].includes(w)
+      (w.length > 2 || /^[a-z]$/i.test(w)) && !['the', 'and', 'or', 'not', 'is', 'are'].includes(w)
     );
 
     // Check if majority of antecedent words appear in premise
@@ -305,7 +355,7 @@ function isModusPonens(premises: string[], conclusion: string): boolean {
 
   // Check if conclusion matches consequent
   const consequentWords = consequent.split(/\s+/).filter(w =>
-    w.length > 2 && !['the', 'and', 'or', 'not'].includes(w)
+    (w.length > 2 || /^[a-z]$/i.test(w)) && !['the', 'and', 'or', 'not', 'is', 'are'].includes(w)
   );
   const concludesConsequent = consequentWords.filter(w => {
     const conclusionWords = conclusionLower.split(/\s+/);
@@ -404,6 +454,12 @@ function assessInference(
     return 'invalid';
   }
 
+  // Check for theological mysteries first - these transcend human logic
+  // but are not logical errors
+  if (isTheologicalMystery(premises, conclusion)) {
+    return 'weak'; // Mystery beyond formal logic, but not invalid
+  }
+
   const combinedLower = premises.join(' ').toLowerCase();
   const conclusionLower = conclusion.toLowerCase();
 
@@ -479,6 +535,20 @@ function assessInference(
     }
   }
 
+  // Check for broken chains: multiple valid syllogisms but disconnected
+  // Example: "All A are B", "All C are D", "X is A" → "X is D" (missing B→C link)
+  const hasSyllogisms = premises.some(p => /all\s+\w+\s+are\s+\w+/i.test(p));
+  if (hasSyllogisms && premises.length >= 2) {
+    // Count how many syllogistic patterns exist
+    const syllogismCount = premises.filter(p => /all\s+\w+\s+are\s+\w+/i.test(p)).length;
+
+    // If we have multiple syllogisms but didn't match transitive chain,
+    // it suggests broken chain → classify as 'weak' (partial structure)
+    if (syllogismCount >= 2) {
+      return 'weak';
+    }
+  }
+
   // Default: check word overlap
   const premiseWords = new Set(combinedLower.split(/\s+/).filter(w => w.length > 2));
   const conclusionWords = new Set(conclusionLower.split(/\s+/).filter(w => w.length > 2));
@@ -505,7 +575,7 @@ function calculateDistance(
       baseDistance = 0; // Valid logic has zero distance
       break;
     case 'weak':
-      baseDistance = 0.45; // Changed from 0.4 to ensure > 0.4
+      baseDistance = 0.45; // Base distance for weak inferences
       break;
     case 'invalid':
       baseDistance = 0.8;
@@ -562,7 +632,16 @@ export function detectLogicalGap(
   const inference = assessInference(premises, conclusion);
 
   // Calculate distance
-  const distance = calculateDistance(inference, fallacies);
+  let distance = calculateDistance(inference, fallacies);
+
+  // Adjust distance for broken chains: multiple syllogisms but disconnected
+  // This adds a small penalty to distinguish from simple weak inferences
+  if (inference === 'weak' && premises.length >= 2) {
+    const syllogismCount = premises.filter(p => /all\s+\w+\s+are\s+\w+/i.test(p)).length;
+    if (syllogismCount >= 2) {
+      distance = Math.min(0.6, distance + 0.1); // Small boost for broken chains
+    }
+  }
 
   // Determine validity
   const valid = inference === 'valid' && fallacies.length === 0;
