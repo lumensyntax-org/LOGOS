@@ -11,9 +11,12 @@
  * This is not iteration—it's participation in ongoing divine life (perichoresis).
  *
  * FLOW:
- * START → SYSTOLE → CUSPIS → PONDER → [END or RESURRECTION]
- *                                           ↓
- *                              RESURRECTION → SYSTOLE (THE CYCLE)
+ * START → DIASTOLE → SYSTOLE → CUSPIS → PONDER → [END or RESURRECTION]
+ *           ↓                                           ↓
+ *      (Expansion)                         RESURRECTION → DIASTOLE (THE CYCLE)
+ *
+ * DIASTOLE: The heart expands, filling with new content (generation)
+ * SYSTOLE: The heart contracts, analyzing the content (gap detection + kenosis)
  */
 
 import { StateGraph, END, START } from "@langchain/langgraph";
@@ -61,7 +64,46 @@ export class CardioidGraph {
   }
 
   // =============================================================================
-  // NODE 1: SYSTOLE (Contraction/Analysis)
+  // NODE 1: DIASTOLE (Expansion/Generation)
+  // =============================================================================
+
+  /**
+   * DIASTOLE - The expansion phase
+   *
+   * The heart expands and fills with content. This is where manifestations
+   * are generated if not already provided.
+   *
+   * THEOLOGICAL NOTE:
+   * The Son (Manifestation) proceeds from the Father (Source). If the Son
+   * is already present (manifestation provided externally), diastole simply
+   * receives it. If absent, diastole generates it through the Spirit's power
+   * (Gemini integration).
+   *
+   * This represents the Incarnation: The Word (Source/Intent) becomes Flesh
+   * (Manifestation/Content).
+   */
+  async diastole(state: CardioidState): Promise<Partial<CardioidState>> {
+    // If manifestation already exists (externally provided), skip generation
+    if (state.manifestation) {
+      return {};
+    }
+
+    // Autonomous generation requires Gemini integration
+    if (!this.gemini) {
+      throw new Error(
+        'Diastole requires GeminiIntegration for autonomous manifestation generation. ' +
+        'Either provide a manifestation in the initial state or pass GeminiIntegration to CardioidGraph constructor.'
+      );
+    }
+
+    // Generate manifestation from source (The Incarnation)
+    const manifestation = await this.gemini.generateManifestation(state.source);
+
+    return { manifestation };
+  }
+
+  // =============================================================================
+  // NODE 2: SYSTOLE (Contraction/Analysis)
   // =============================================================================
 
   /**
@@ -119,7 +161,7 @@ export class CardioidGraph {
   }
 
   // =============================================================================
-  // NODE 2: CUSPIS (The Decision Point)
+  // NODE 3: CUSPIS (The Decision Point)
   // =============================================================================
 
   /**
@@ -180,7 +222,7 @@ export class CardioidGraph {
   }
 
   // =============================================================================
-  // NODE 3: PONDER (Marian Memory)
+  // NODE 4: PONDER (Marian Memory)
   // =============================================================================
 
   /**
@@ -220,7 +262,7 @@ export class CardioidGraph {
   }
 
   // =============================================================================
-  // NODE 4: RESURRECTION (Transformation)
+  // NODE 5: RESURRECTION (Transformation)
   // =============================================================================
 
   /**
@@ -291,13 +333,14 @@ export class CardioidGraph {
    * Build the cardioid heartbeat graph
    *
    * FLOW:
-   * START → SYSTOLE → CUSPIS → PONDER → [Router]
-   *                                         ↓
-   *                    ┌─── END (success/ontological)
-   *                    └─── RESURRECTION → SYSTOLE (THE CYCLE)
+   * START → DIASTOLE → SYSTOLE → CUSPIS → PONDER → [Router]
+   *           ↓                                        ↓
+   *      (Generation)              ┌─── END (success/ontological)
+   *                                └─── RESURRECTION → DIASTOLE (THE CYCLE)
    *
    * THEOLOGICAL VERIFICATION:
-   * - The cycle resurrection → systole represents transformation → new verification
+   * - The cycle resurrection → diastole represents transformation → new generation
+   * - After resurrection, new content must be generated (or re-generated) and verified
    * - Ontological boundaries route to END (hard stop)
    * - Exhaustion (max attempts) routes to END (soft stop)
    * - Success routes to END (natural completion)
@@ -306,15 +349,17 @@ export class CardioidGraph {
     const workflow = new StateGraph<CardioidState>({
       channels: graphChannels as any
     })
+    .addNode("diastole", this.diastole.bind(this))
     .addNode("systole", this.systole.bind(this))
     .addNode("cuspis", this.cuspis.bind(this))
     .addNode("ponder", this.ponderNode.bind(this))
     .addNode("resurrection", this.resurrection.bind(this))
 
     // The Fixed Flow
-    .addEdge(START, "systole")
-    .addEdge("systole", "cuspis")
-    .addEdge("cuspis", "ponder") // Decision is always pondered before acting
+    .addEdge(START, "diastole")      // Heart fills first (generation)
+    .addEdge("diastole", "systole")  // Then contracts (analysis)
+    .addEdge("systole", "cuspis")    // Then decides
+    .addEdge("cuspis", "ponder")     // Decision is always pondered before acting
 
     // The Beat (Conditional Logic from PONDER)
     .addConditionalEdges("ponder", (state: CardioidState) => {
@@ -338,8 +383,8 @@ export class CardioidGraph {
         return END;
     })
 
-    // The Loop: Resurrection feeds back into Systole (New creation must be verified)
-    .addEdge("resurrection", "systole");
+    // The Loop: Resurrection feeds back into Diastole (New creation must be re-generated and verified)
+    .addEdge("resurrection", "diastole");
 
     return workflow.compile();
   }

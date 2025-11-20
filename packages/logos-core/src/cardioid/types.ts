@@ -170,6 +170,13 @@ export interface MarianMemory {
  *
  * Unlike linear verification (one-shot), cardioid verification
  * circulates: each cycle returns enriched state back to the heart.
+ *
+ * COMPLETE CYCLE:
+ * 1. DIASTOLE: Heart expands - manifestation generated from source (if null)
+ * 2. SYSTOLE: Heart contracts - gap detected, kenosis applied
+ * 3. CUSPIS: Critical decision point - mediation mode determined
+ * 4. PONDER: Marian contemplation - experience integrated into memory
+ * 5. [RESURRECTION]: If needed, transformation through death → back to DIASTOLE
  */
 export interface CardioidState {
   /** Current cycle number (1-indexed) */
@@ -178,7 +185,15 @@ export interface CardioidState {
   /** Maximum cycles allowed (prevents infinite loops) */
   maxCycles: number;
 
-  /** DIASTOLE: Source and its manifestation */
+  /**
+   * DIASTOLE: Source and its manifestation
+   *
+   * - source: The Father's intent (always present)
+   * - manifestation: The Son's output (may be null initially)
+   *
+   * If manifestation is null at START, DIASTOLE will generate it autonomously
+   * using Gemini. If manifestation is provided externally, DIASTOLE skips generation.
+   */
   source: Source;
   manifestation: Manifestation | null;
 
