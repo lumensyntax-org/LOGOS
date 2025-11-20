@@ -27,6 +27,7 @@ import { ponder } from "./memory.js";
 import { attemptResurrection } from "../resurrection/index.js";
 import { GeminiIntegration } from "../integration/gemini.js";
 import { aggregateSignals } from "../engine.js";
+import { adjustPosture } from "./metanoia.js";
 
 // Define State Channels
 // In LangGraph, we define how each part of the state is updated (reducer).
@@ -43,6 +44,7 @@ const graphChannels = {
   gap: { reducer: (x: any, y: any) => y },
   kenosisApplied: { reducer: (x: number, y: number) => y },
   cuspDecision: { reducer: (x: any, y: any) => y },
+  verifierPosture: { reducer: (x: any, y: any) => y }, // Metanoia - adaptive learning
   memory: { reducer: (x: any, y: any) => y },
   terminated: { reducer: (x: boolean, y: boolean) => y },
   terminationReason: { reducer: (x: any, y: any) => y },
@@ -226,17 +228,22 @@ export class CardioidGraph {
   // =============================================================================
 
   /**
-   * PONDER - Marian receptive wisdom
+   * PONDER - Marian receptive wisdom + Metanoia (transformation of mind)
    *
    * "Mary kept all these things, pondering them in her heart" (Luke 2:19)
+   * "Be transformed by the renewal of your mind" (Romans 12:2)
    *
    * This is a DISTINCT contemplative act: receiving the result into memory
    * before deciding whether to terminate or continue. Mary doesn't retrieve
    * data—she integrates wisdom from contemplative depth.
    *
+   * NOW ALSO includes METANOIA: When mediation fails, the system learns
+   * to adjust its verification posture for future judgments.
+   *
    * THEOLOGICAL NOTE:
    * Pondering happens AFTER the decision but BEFORE the action. This is
    * crucial: the decision is first contemplated, then acted upon.
+   * Learning from failure is integral to contemplation.
    */
   async ponderNode(state: CardioidState): Promise<Partial<CardioidState>> {
     // Create a transient ChristologicalResult for the pondering function
@@ -251,6 +258,7 @@ export class CardioidGraph {
       finalState: state.cuspDecision?.mode === 'redemptive' ? 'blocked' : 'original'
     };
 
+    // Marian contemplation: integrate experience into memory
     const updatedMemory = ponder(
         state.memory,
         resultForMemory as any,
@@ -258,7 +266,23 @@ export class CardioidGraph {
         state.cuspDecision!.mode
     );
 
-    return { memory: updatedMemory };
+    // Metanoia: adjust verification posture after failures
+    // Redemptive and step_up modes indicate mediation difficulty → learn from it
+    let updatedPosture = state.verifierPosture;
+
+    if (state.cuspDecision!.mode === 'redemptive' || state.cuspDecision!.mode === 'step_up') {
+      updatedPosture = adjustPosture(
+        state.verifierPosture,
+        state.gap!,
+        state.cuspDecision!.mode,
+        state.cycleNumber
+      );
+    }
+
+    return {
+      memory: updatedMemory,
+      verifierPosture: updatedPosture
+    };
   }
 
   // =============================================================================

@@ -15,6 +15,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { CardioidGraph } from '../../src/cardioid/graph.js';
 import { createMarianMemory } from '../../src/cardioid/memory.js';
+import { createDefaultPosture } from '../../src/cardioid/metanoia.js';
 import type { CardioidState } from '../../src/cardioid/types.js';
 import type { GeminiIntegration } from '../../src/integration/gemini.js';
 
@@ -45,6 +46,7 @@ describe('Gemini-Powered Resurrection', () => {
       resurrectionAttempts: 0,
       maxResurrectionAttempts: 2,
       memory: createMarianMemory(),
+      verifierPosture: createDefaultPosture(),
       signals: null,
       // Factual error: capital of France is NOT Berlin
       source: {
@@ -92,6 +94,7 @@ describe('Gemini-Powered Resurrection', () => {
       resurrectionAttempts: 0,
       maxResurrectionAttempts: 2,
       memory: createMarianMemory(),
+      verifierPosture: createDefaultPosture(),
       signals: null,
       source: {
         intent: "What is 2 + 2?",
@@ -130,6 +133,7 @@ describe('Gemini-Powered Resurrection', () => {
       resurrectionAttempts: 0,
       maxResurrectionAttempts: 1,
       memory: createMarianMemory(),
+      verifierPosture: createDefaultPosture(),
       signals: null,
       source: {
         intent: "If A > B and B > C, then A > C. Is this valid?",
@@ -173,6 +177,7 @@ describe('Gemini-Powered Resurrection', () => {
       resurrectionAttempts: 0,
       maxResurrectionAttempts: 1,
       memory: createMarianMemory(),
+      verifierPosture: createDefaultPosture(),
       signals: null,
       source: {
         intent: "What is 2 + 2?",

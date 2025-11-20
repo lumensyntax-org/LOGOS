@@ -481,17 +481,19 @@ describe('Marian Memory - Receptive Wisdom', () => {
 
       // Ponder semantic gap
       const semanticGap: GapResult = {
-        type: 'SEMANTIC',
-        distance: 0.3,
-        bridgeable: true,
-        reason: 'anthropomorphism',
+        semantic: {
+          conceptual: {
+            drift: 'anthropomorphic drift'
+          },
+          transformations: [{ type: 'anthropomorphism', from: 'a', to: 'b' }]
+        },
+        factual: null,
+        logical: null,
+        ontological: null,
         overallDistance: 0.3,
         dominantType: 'SEMANTIC',
-        conceptual: {
-          drift: ['anthropomorphic'],
-          transformations: [{ type: 'anthropomorphism', from: 'a', to: 'b' }],
-          recoverable: true
-        }
+        bridgeable: true,
+        reason: 'anthropomorphism'
       };
 
       const semanticResult: ChristologicalResult = {
@@ -507,18 +509,18 @@ describe('Marian Memory - Receptive Wisdom', () => {
 
       // Ponder logical gap (different type)
       const logicalGap: GapResult = {
-        type: 'LOGICAL',
-        distance: 0.6,
-        bridgeable: true,
-        reason: 'fallacy',
+        semantic: null,
+        factual: null,
+        logical: {
+          category: 'weak' as const,
+          fallacies: [{ type: 'affirming_consequent' as const, location: 'test' }],
+          reason: 'fallacy detected'
+        },
+        ontological: null,
         overallDistance: 0.6,
         dominantType: 'LOGICAL',
-        inference: {
-          category: 'weak',
-          fallacies: [{ type: 'affirming_consequent', description: 'test' }],
-          premises: [],
-          conclusion: ''
-        }
+        bridgeable: true,
+        reason: 'fallacy'
       };
 
       const logicalResult: ChristologicalResult = {
@@ -534,17 +536,19 @@ describe('Marian Memory - Receptive Wisdom', () => {
 
       // Now recall wisdom for a NEW semantic gap with anthropomorphism
       const newSemanticGap: GapResult = {
-        type: 'SEMANTIC',
-        distance: 0.35,
-        bridgeable: true,
-        reason: 'another anthropomorphism',
+        semantic: {
+          conceptual: {
+            drift: 'anthropomorphic transformation'
+          },
+          transformations: [{ type: 'anthropomorphism', from: 'c', to: 'd' }]
+        },
+        factual: null,
+        logical: null,
+        ontological: null,
         overallDistance: 0.35,
         dominantType: 'SEMANTIC',
-        conceptual: {
-          drift: ['anthropomorphic'],
-          transformations: [{ type: 'anthropomorphism', from: 'c', to: 'd' }],
-          recoverable: true
-        }
+        bridgeable: true,
+        reason: 'another anthropomorphism'
       };
 
       const recalled = recallWisdom(memory, newSemanticGap);
