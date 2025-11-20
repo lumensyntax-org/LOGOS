@@ -107,19 +107,36 @@ function selectStrategy(gap: Gap, attemptNumber: number): string {
 }
 
 /**
+ * Transformation function type
+ *
+ * External integrations (like Gemini) can provide a real transformation function
+ * that takes the original content and strategy, then returns transformed content.
+ */
+export type TransformFunction = (
+  originalContent: string,
+  strategy: string
+) => Promise<string>;
+
+/**
  * Apply transformation strategy
  *
  * This is a simplified implementation - in production would actually
- * transform content based on strategy
+ * transform content based on strategy.
+ *
+ * If a transformFunction is provided (e.g., from Gemini), it will be used
+ * for real content transformation. Otherwise, falls back to probabilistic stub.
  */
-function applyTransformation(
+async function applyTransformation(
   strategy: string,
   gap: Gap,
-  learnings: string[]
-): {
+  learnings: string[],
+  originalContent: string,
+  transformFunction?: TransformFunction
+): Promise<{
   success: boolean;
   transformation: string;
-} {
+  transformedContent?: string;
+}> {
   // Ontological gaps cannot be transformed
   if (gap.dominantType === 'ONTOLOGICAL') {
     return {
@@ -136,7 +153,30 @@ function applyTransformation(
     };
   }
 
-  // Success probability decreases with distance
+  // If real transformation function provided, use it
+  if (transformFunction) {
+    try {
+      const transformedContent = await transformFunction(originalContent, strategy);
+
+      // Consider transformation successful if content actually changed
+      const success = transformedContent !== originalContent && transformedContent.length > 0;
+
+      return {
+        success,
+        transformation: success
+          ? `Successfully applied "${strategy}" to bridge ${gap.dominantType} gap`
+          : `Attempted "${strategy}" but transformation produced no change`,
+        transformedContent: success ? transformedContent : undefined
+      };
+    } catch (error) {
+      return {
+        success: false,
+        transformation: `Transformation failed: ${error instanceof Error ? error.message : String(error)}`
+      };
+    }
+  }
+
+  // Fallback: probabilistic stub (for tests without Gemini)
   const successProbability = 1 - gap.overallDistance;
   const success = Math.random() < successProbability;
 
@@ -152,22 +192,31 @@ function applyTransformation(
  */
 async function performAttempt(
   failed: FailedResult,
-  attemptNumber: number
-): Promise<ResurrectionAttempt> {
+  attemptNumber: number,
+  originalContent: string,
+  transformFunction?: TransformFunction
+): Promise<ResurrectionAttempt & { transformedContent?: string }> {
   // Extract learnings
   const learnings = extractLearnings(failed, attemptNumber);
 
   // Select strategy (must be different each time - "Cannot use same method that failed")
   const strategy = selectStrategy(failed.gap, attemptNumber);
 
-  // Apply transformation
-  const result = applyTransformation(strategy, failed.gap, learnings);
+  // Apply transformation (with optional Gemini integration)
+  const result = await applyTransformation(
+    strategy,
+    failed.gap,
+    learnings,
+    originalContent,
+    transformFunction
+  );
 
   return {
     attemptNumber,
     strategy,
     learnings,
-    transformation: result.transformation
+    transformation: result.transformation,
+    transformedContent: result.transformedContent
   };
 }
 
@@ -176,11 +225,15 @@ async function performAttempt(
  *
  * @param failed - The failed result to resurrect
  * @param maxAttempts - Maximum resurrection attempts
+ * @param originalContent - The original content that failed (to be transformed)
+ * @param transformFunction - Optional function for real content transformation (e.g., Gemini)
  * @returns ResurrectionResult with attempts and final state
  */
 export async function attemptResurrection(
   failed: FailedResult,
-  maxAttempts: number
+  maxAttempts: number,
+  originalContent: string = '',
+  transformFunction?: TransformFunction
 ): Promise<ResurrectionResult> {
   // Handle zero attempts
   if (maxAttempts === 0) {
@@ -195,11 +248,17 @@ export async function attemptResurrection(
 
   const attempts: ResurrectionAttempt[] = [];
   const allLearnings: string[] = [];
+  let lastTransformedContent: string | undefined;
 
   // Perform resurrection attempts
   for (let i = 1; i <= maxAttempts; i++) {
-    const attempt = await performAttempt(failed, i);
+    const attempt = await performAttempt(failed, i, originalContent, transformFunction);
     attempts.push(attempt);
+
+    // Store transformed content from this attempt
+    if (attempt.transformedContent) {
+      lastTransformedContent = attempt.transformedContent;
+    }
 
     // Accumulate learnings
     allLearnings.push(...attempt.learnings);
@@ -212,8 +271,8 @@ export async function attemptResurrection(
         attempts,
         finalState: 'transformed',
         transformation: {
-          from: failed.reason,
-          to: 'Corrected through resurrection',
+          from: originalContent || failed.reason,
+          to: lastTransformedContent || 'Corrected through resurrection',
           how: attempt.strategy,
           preserves: ['Core intent', 'Essential meaning']
         },

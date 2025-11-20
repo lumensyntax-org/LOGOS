@@ -141,11 +141,12 @@ export class LogosEngine {
 
       const resurrection = await attemptResurrection(
         failedResult,
-        this.config.policy.maxResurrectionAttempts
+        this.config.policy.maxResurrectionAttempts,
+        manifestation.content  // Pass original content for transformation
       );
-      
+
       redemptionAttempted = true;
-      
+
       if (resurrection.succeeded) {
         finalState = 'redeemed';
         // Re-evaluate with resurrected output

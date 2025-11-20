@@ -235,18 +235,35 @@ export class CardioidGraph {
    * THEOLOGICAL NOTE:
    * The cycle CLOSES here: resurrection → systole. The resurrected body
    * must be verified again. This is the perichoretic loop made explicit.
+   *
+   * INTEGRATION NOTE:
+   * If Gemini is available, uses real content transformation via transformContent().
+   * Otherwise falls back to probabilistic stub for testing.
    */
   async resurrection(state: CardioidState): Promise<Partial<CardioidState>> {
     const failedResult = {
         gap: state.gap!,
-        decision: 'BLOCKED',
+        decision: 'BLOCKED' as const,
         confidence: 1.0 - state.kenosisApplied,
         reason: state.gap!.reason
     };
 
-    // Attempt resurrection (transformation)
-    // In a full implementation with Gemini, this would use transformContent()
-    const result = await attemptResurrection(failedResult as any, state.resurrectionAttempts + 1);
+    const originalContent = state.manifestation?.content || '';
+
+    // Create optional transform function using Gemini if available
+    const transformFunction = this.gemini
+      ? async (content: string, strategy: string) => {
+          return await this.gemini!.transformContent(content, strategy);
+        }
+      : undefined;
+
+    // Attempt resurrection with Gemini-powered transformation
+    const result = await attemptResurrection(
+      failedResult,
+      state.resurrectionAttempts + 1,
+      originalContent,
+      transformFunction
+    );
 
     if (result.succeeded && result.transformation) {
         // The "Raised" body (transformed content)
@@ -256,7 +273,10 @@ export class CardioidGraph {
                 content: result.transformation.to,
                 timestamp: new Date()
             },
-            resurrectionAttempts: state.resurrectionAttempts + 1
+            resurrectionAttempts: state.resurrectionAttempts + 1,
+            // Clear gap so SYSTOLE will re-detect with new content
+            gap: null,
+            kenosisApplied: 0
         };
     }
 
