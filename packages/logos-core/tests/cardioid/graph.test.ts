@@ -11,6 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import { CardioidGraph } from '../../src/cardioid/graph.js';
 import { createMarianMemory } from '../../src/cardioid/memory.js';
+import { createDefaultPosture } from '../../src/cardioid/metanoia.js';
 import type { CardioidState } from '../../src/cardioid/types.js';
 
 describe('Cardioid Graph Flow', () => {
@@ -23,6 +24,7 @@ describe('Cardioid Graph Flow', () => {
         resurrectionAttempts: 0,
         maxResurrectionAttempts: 3,
         memory: createMarianMemory(),
+        verifierPosture: createDefaultPosture(),
         source: { intent: "What is 2+2?", timestamp: new Date() },
         manifestation: { content: "4", timestamp: new Date() },
         signals: null, // No signals provided - will default to divine confidence
@@ -61,6 +63,7 @@ describe('Cardioid Graph Flow', () => {
         resurrectionAttempts: 0,
         maxResurrectionAttempts: 3,
         memory: createMarianMemory(),
+        verifierPosture: createDefaultPosture(),
         signals: null,
         // Intentional Factual Error to trigger Redemptive mode
         source: {
@@ -92,6 +95,7 @@ describe('Cardioid Graph Flow', () => {
         resurrectionAttempts: 0,
         maxResurrectionAttempts: 3,
         memory: createMarianMemory(),
+        verifierPosture: createDefaultPosture(),
         signals: null,
         // Ontological gap: asking AI to have subjective experience
         source: {
@@ -150,6 +154,7 @@ describe('Cardioid Graph Flow', () => {
         resurrectionAttempts: 0,
         maxResurrectionAttempts: 2,
         memory: initialMemory,
+        verifierPosture: createDefaultPosture(),
         source: {
             intent: "Calculate 10 / 0",
             groundTruth: { mathematically_valid: false },
@@ -179,6 +184,7 @@ describe('Cardioid Graph Flow', () => {
         resurrectionAttempts: 0,
         maxResurrectionAttempts: 2, // Only 2 attempts allowed
         memory: createMarianMemory(),
+        verifierPosture: createDefaultPosture(),
         signals: null,
         source: {
             intent: "What is 2 + 2?",

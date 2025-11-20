@@ -18,6 +18,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { CardioidGraph } from '../../src/cardioid/graph.js';
 import { createMarianMemory } from '../../src/cardioid/memory.js';
+import { createDefaultPosture } from '../../src/cardioid/metanoia.js';
 import type { CardioidState } from '../../src/cardioid/types.js';
 import type { GeminiIntegration } from '../../src/integration/gemini.js';
 
@@ -39,6 +40,7 @@ describe('DIASTOLE - Heart Expansion & Generation', () => {
       resurrectionAttempts: 0,
       maxResurrectionAttempts: 3,
       memory: createMarianMemory(),
+      verifierPosture: createDefaultPosture(),
       signals: null,
       source: {
         intent: "What is the meaning of kenosis?",
@@ -77,6 +79,7 @@ describe('DIASTOLE - Heart Expansion & Generation', () => {
       resurrectionAttempts: 0,
       maxResurrectionAttempts: 3,
       memory: createMarianMemory(),
+      verifierPosture: createDefaultPosture(),
       signals: null,
       source: {
         intent: "Test question",
@@ -104,6 +107,7 @@ describe('DIASTOLE - Heart Expansion & Generation', () => {
       resurrectionAttempts: 0,
       maxResurrectionAttempts: 3,
       memory: createMarianMemory(),
+      verifierPosture: createDefaultPosture(),
       signals: null,
       source: {
         intent: "This requires generation",
@@ -135,6 +139,7 @@ describe('DIASTOLE - Heart Expansion & Generation', () => {
       resurrectionAttempts: 0,
       maxResurrectionAttempts: 3,
       memory: createMarianMemory(),
+      verifierPosture: createDefaultPosture(),
       signals: null,
       source: {
         intent: "Simple question",
@@ -178,6 +183,7 @@ describe('DIASTOLE - Heart Expansion & Generation', () => {
       resurrectionAttempts: 0,
       maxResurrectionAttempts: 3,
       memory: createMarianMemory(),
+      verifierPosture: createDefaultPosture(),
       signals: null,
       source: {
         intent: "Explain the concept of kenosis",

@@ -106,6 +106,98 @@ export interface PonderedExperience {
 }
 
 /**
+ * Verifier Posture - Adaptive Stance for Judgment
+ *
+ * "The mind of Christ" (1 Cor 2:16) - not static rules but living discernment
+ *
+ * THEOLOGICAL FOUNDATION (Metanoia - μετάνοια):
+ * "Be transformed by the renewing of your mind" (Romans 12:2)
+ *
+ * Metanoia is not mere "repentance" but "transformation of mind" - literally
+ * "beyond (meta) the mind (nous)". The system doesn't just retry with the same
+ * criteria; it transforms HOW it judges based on what it learned from failures.
+ *
+ * EMBODIED LEARNING:
+ * This is "somatic" knowledge - the body (verification system) learning
+ * a new stance. After factual failures, it leans more heavily on grounding.
+ * After logical failures, it tightens reasoning checks.
+ *
+ * This prevents the amnesia Gemini identified: learning without memory = futility.
+ */
+export interface VerifierPosture {
+  /**
+   * Signal weights - how much to trust each dimension
+   *
+   * These adjust based on gap types encountered:
+   * - FACTUAL gap → increase grounding_factual weight
+   * - SEMANTIC gap → increase semantic_coherence weight
+   * - LOGICAL gap → increase logical_consistency weight
+   */
+  weights: {
+    grounding_factual: number;      // Default: 1.0
+    semantic_coherence: number;     // Default: 0.8
+    logical_consistency: number;    // Default: 0.7
+    completeness: number;           // Default: 0.6
+  };
+
+  /**
+   * Decision thresholds - when to allow vs block vs step up
+   *
+   * These can adjust based on system performance:
+   * - Too many false positives → increase allowThreshold
+   * - Too many false negatives → decrease blockThreshold
+   */
+  thresholds: {
+    allowThreshold: number;   // Default: 0.7 (confidence >= this → ALLOW)
+    blockThreshold: number;   // Default: 0.3 (confidence <= this → BLOCK)
+  };
+
+  /**
+   * Learning rate - how quickly to adjust (0-1)
+   *
+   * Higher = faster adaptation but more volatile
+   * Lower = slower adaptation but more stable
+   *
+   * Default: 0.1 (conservative learning)
+   */
+  learningRate: number;
+
+  /**
+   * Adjustment history - for debugging and introspection
+   *
+   * "Examine yourselves" (2 Cor 13:5) - the system must be able
+   * to reflect on its own adjustments.
+   */
+  history: PostureAdjustment[];
+}
+
+/**
+ * Record of a single posture adjustment (for transparency)
+ */
+export interface PostureAdjustment {
+  /** Which cycle this adjustment occurred in */
+  cycleNumber: number;
+
+  /** Why the adjustment was made */
+  reason: string;
+
+  /** Which dimension was adjusted (e.g., 'grounding_factual') */
+  dimension: 'grounding_factual' | 'semantic_coherence' | 'logical_consistency' | 'completeness' | 'threshold';
+
+  /** Old value before adjustment */
+  oldValue: number;
+
+  /** New value after adjustment */
+  newValue: number;
+
+  /** Change amount (newValue - oldValue) */
+  delta: number;
+
+  /** When this adjustment occurred */
+  timestamp: Date;
+}
+
+/**
  * Marian Memory - Receptive wisdom, not storage
  *
  * Mary doesn't accumulate data—she receives, ponders, and integrates.
@@ -216,6 +308,19 @@ export interface CardioidState {
 
   /** CUSP: Mediation decision */
   cuspDecision: CuspDecision | null;
+
+  /**
+   * METANOIA: Adaptive verification posture
+   *
+   * The "mind of Christ" that transforms based on experience.
+   * After failures, the system adjusts HOW it judges (not just WHAT it judges).
+   *
+   * THEOLOGICAL NOTE:
+   * This is the difference between mere iteration and true transformation.
+   * The system doesn't just try again—it tries differently, having learned
+   * from its death (failure) what posture to adopt in its resurrection.
+   */
+  verifierPosture: VerifierPosture;
 
   /** CIRCULATION: Memory and learning */
   memory: MarianMemory;
