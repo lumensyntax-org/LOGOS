@@ -5,7 +5,6 @@
  */
 
 import * as Sentry from '@sentry/node';
-import { ProfilingIntegration } from '@sentry/profiling-node';
 
 /**
  * Initialize Sentry for error tracking and performance monitoring
@@ -34,11 +33,6 @@ export function initSentry() {
 
     // Profiling sample rate (0.0 to 1.0)
     profilesSampleRate: parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE || '0.1'),
-
-    // Enable profiling integration
-    integrations: [
-      new ProfilingIntegration(),
-    ],
 
     // Don't send errors in development unless explicitly enabled
     enabled: process.env.NODE_ENV === 'production' || process.env.SENTRY_ENABLED === 'true',
