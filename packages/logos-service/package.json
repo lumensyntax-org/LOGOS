@@ -8,21 +8,29 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsup src/index.ts --format esm",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "load-test": "node load-test.js basic",
+    "load-test:hallucination": "node load-test.js hallucination",
+    "load-test:mixed": "node load-test.js mixed",
+    "load-test:stress": "node load-test.js stress"
   },
   "dependencies": {
-    "@logos/core": "workspace:*",
-    "fastify": "^4.28.1",
     "@fastify/cors": "^9.0.1",
     "@fastify/helmet": "^11.1.1",
     "@fastify/rate-limit": "^9.1.0",
+    "@logos/core": "workspace:*",
+    "@sentry/node": "^10.26.0",
+    "@sentry/profiling-node": "^10.26.0",
+    "fastify": "^4.28.1",
     "ioredis": "^5.4.1",
     "pino": "^9.3.2",
     "pino-pretty": "^11.2.2",
+    "prom-client": "^15.1.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20.14.12",
+    "autocannon": "^8.0.0",
     "tsup": "^8.2.4",
     "tsx": "^4.20.5",
     "typescript": "^5.6.3"

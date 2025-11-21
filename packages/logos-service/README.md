@@ -93,6 +93,23 @@ Health check endpoint.
 }
 ```
 
+### GET /metrics
+
+Prometheus metrics endpoint for monitoring.
+
+**Response:** Prometheus exposition format
+
+```
+# HELP logos_verifications_total Total number of verification requests processed
+# TYPE logos_verifications_total counter
+logos_verifications_total{decision="ALLOW"} 42
+
+# HELP logos_gap_distance Gap distance measurements by dimension
+# TYPE logos_gap_distance histogram
+logos_gap_distance_bucket{le="0.1",dimension="semantic"} 35
+...
+```
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -109,6 +126,11 @@ Health check endpoint.
 | `RATE_LIMIT_MAX` | `60` | Max requests per time window |
 | `RATE_LIMIT_WINDOW` | `1 minute` | Rate limit time window |
 | `ALLOWED_ORIGINS` | `*` | CORS allowed origins |
+| `SENTRY_DSN` | - | Sentry error tracking DSN |
+| `SENTRY_ENABLED` | `false` | Enable Sentry in development |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | Performance tracing sample rate |
+| `SENTRY_PROFILES_SAMPLE_RATE` | `0.1` | Profiling sample rate |
+| `APP_VERSION` | `0.1.0` | Application version for Sentry releases |
 
 ## Architecture
 
@@ -149,10 +171,45 @@ Health check endpoint.
 
 ## Performance
 
-Target metrics (similar to TruthSyntax):
+Target metrics:
 - **Throughput**: 100-500 req/s (single instance)
 - **Latency p50**: <20ms
 - **Latency p99**: <100ms
+
+### Load Testing
+
+Run performance benchmarks:
+
+```bash
+# Basic test (30s, 10 connections)
+pnpm load-test
+
+# Hallucination detection test
+pnpm load-test:hallucination
+
+# Mixed workload (realistic)
+pnpm load-test:mixed
+
+# Stress test (100 connections)
+pnpm load-test:stress
+```
+
+### Current Performance (Local)
+
+- **Throughput**: ~4,800 req/s (10x target ✅)
+- **Latency p50**: 1ms
+- **Latency p99**: ~4ms
+
+## Monitoring
+
+LOGOS Service includes comprehensive monitoring:
+
+- **Prometheus Metrics**: `GET /metrics` - Request rates, latencies, gap distances, decision distributions
+- **Sentry Error Tracking**: Automatic error capture with verification context
+- **Load Testing**: Autocannon-based performance benchmarking
+- **Grafana Dashboards**: Pre-configured panels for key metrics
+
+See [MONITORING.md](./MONITORING.md) for complete documentation.
 
 ## License
 
