@@ -171,10 +171,45 @@ logos_gap_distance_bucket{le="0.1",dimension="semantic"} 35
 
 ## Performance
 
-Target metrics (similar to TruthSyntax):
+Target metrics:
 - **Throughput**: 100-500 req/s (single instance)
 - **Latency p50**: <20ms
 - **Latency p99**: <100ms
+
+### Load Testing
+
+Run performance benchmarks:
+
+```bash
+# Basic test (30s, 10 connections)
+pnpm load-test
+
+# Hallucination detection test
+pnpm load-test:hallucination
+
+# Mixed workload (realistic)
+pnpm load-test:mixed
+
+# Stress test (100 connections)
+pnpm load-test:stress
+```
+
+### Current Performance (Local)
+
+- **Throughput**: ~4,800 req/s (10x target ✅)
+- **Latency p50**: 1ms
+- **Latency p99**: ~4ms
+
+## Monitoring
+
+LOGOS Service includes comprehensive monitoring:
+
+- **Prometheus Metrics**: `GET /metrics` - Request rates, latencies, gap distances, decision distributions
+- **Sentry Error Tracking**: Automatic error capture with verification context
+- **Load Testing**: Autocannon-based performance benchmarking
+- **Grafana Dashboards**: Pre-configured panels for key metrics
+
+See [MONITORING.md](./MONITORING.md) for complete documentation.
 
 ## License
 
