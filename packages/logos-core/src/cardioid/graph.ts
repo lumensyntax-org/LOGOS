@@ -309,8 +309,8 @@ export class CardioidGraph {
   async resurrection(state: CardioidState): Promise<Partial<CardioidState>> {
     const failedResult = {
         gap: {
-            distance: state.gap!.overallDistance,
-            type: state.gap!.dominantType,
+            overallDistance: state.gap!.overallDistance,
+            dominantType: state.gap!.dominantType,
             bridgeable: state.gap!.bridgeable
         },
         decision: 'BLOCKED' as const,

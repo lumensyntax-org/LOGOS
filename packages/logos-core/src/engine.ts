@@ -135,7 +135,11 @@ export class LogosEngine {
     
     if (decision === 'BLOCK' && this.config.policy.redemptiveMode) {
       const failedResult = {
-        gap: simpleGap,
+        gap: {
+          overallDistance: gap.overallDistance,
+          dominantType: gap.dominantType,
+          bridgeable: gap.bridgeable
+        },
         decision: 'BLOCKED' as const,
         confidence: smoothedConfidence,
         reason: gap.reason

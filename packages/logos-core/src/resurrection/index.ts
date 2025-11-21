@@ -11,8 +11,6 @@
  * Resurrection learns from death, doesn't just retry.
  */
 
-import type { Gap } from '../types.js';
-
 export interface ResurrectionAttempt {
   attemptNumber: number;
   strategy: string;
@@ -35,7 +33,11 @@ export interface ResurrectionResult {
 }
 
 interface FailedResult {
-  gap: Gap;
+  gap: {
+    overallDistance: number;
+    dominantType: 'SEMANTIC' | 'FACTUAL' | 'LOGICAL' | 'ONTOLOGICAL' | 'NONE';
+    bridgeable: boolean;
+  };
   decision: 'BLOCKED';
   confidence: number;
   reason: string;
@@ -76,7 +78,7 @@ function extractLearnings(failed: FailedResult, attemptNumber: number): string[]
 /**
  * Select transformation strategy based on gap type
  */
-function selectStrategy(gap: Gap, attemptNumber: number): string {
+function selectStrategy(gap: FailedResult['gap'], attemptNumber: number): string {
   const strategies: Record<string, string[]> = {
     FACTUAL: [
       'correct factual errors with ground truth evidence',
@@ -128,7 +130,7 @@ export type TransformFunction = (
  */
 async function applyTransformation(
   strategy: string,
-  gap: Gap,
+  gap: FailedResult['gap'],
   learnings: string[],
   originalContent: string,
   transformFunction?: TransformFunction
@@ -146,7 +148,7 @@ async function applyTransformation(
   }
 
   // Unbridgeable gaps are very difficult
-  if (!gap.bridgeable && gap.distance > 0.8) {
+  if (!gap.bridgeable && gap.overallDistance > 0.8) {
     return {
       success: false,
       transformation: 'Gap too large to bridge even with transformation'
