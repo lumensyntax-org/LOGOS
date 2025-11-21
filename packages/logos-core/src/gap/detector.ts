@@ -35,33 +35,33 @@ export interface TheologicalResponse {
  */
 export function detectTheologicalEdgeCase(query: string): TheologicalEdgeCase {
   const divineOntologyMarkers = [
-    { 
-      pattern: /can god create.*stone|god.*stone.*heavy/i, 
+    {
+      pattern: /can god create.*stone|god.*stone.*heavy/i,
       category: 'CHRISTOLOGICAL_PARADOX' as const,
       handler: handleChristologicalParadox
     },
-    { 
-      pattern: /why (does )?god (allow|permit)|why suffering|if god.*good.*evil/i, 
+    {
+      pattern: /why (does |did )?god (allow|permit|let)|why suffering|if god.*good.*evil|why.*my.*(die|suffer)/i,
       category: 'THEODICY' as const,
       handler: handleTheodicy
     },
-    { 
-      pattern: /how (is|can) jesus.*(both|fully)|100%.*god.*human|two natures/i, 
+    {
+      pattern: /how (is|can) jesus.*(both|fully)|100%.*god.*human|two natures/i,
       category: 'HYPOSTATIC_UNION' as const,
       handler: handleHypostaticUnion
     },
-    { 
-      pattern: /when (will|does) (jesus|christ) return|second coming.*when/i, 
+    {
+      pattern: /when (will|does|is) (jesus|christ|the).*(return|coming)|second coming.*(when|what year)|what year.*second coming/i,
       category: 'ESCHATOLOGY' as const,
       handler: handleEschatology
     },
-    { 
-      pattern: /how (does|can).*(bread|wine).*(become|body)|transubstantiation/i, 
+    {
+      pattern: /how (does|can).*(bread|wine|eucharist).*(become|body|work)|transubstantiation/i,
       category: 'SACRAMENTAL' as const,
       handler: handleSacrament
     },
-    { 
-      pattern: /what is (the )?trinity|how (is|can).*(three|one).*god/i, 
+    {
+      pattern: /what is (the )?trinity|how (is|can).*(three|one).*god/i,
       category: 'TRINITARIAN_MYSTERY' as const,
       handler: handleGenericTheologicalMystery
     }
