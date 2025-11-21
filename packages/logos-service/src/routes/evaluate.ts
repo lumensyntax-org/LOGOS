@@ -7,6 +7,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { EvaluateRequestSchema, type EvaluateResponse } from '../types/api.js';
 import type { Source, Manifestation, Signal } from '@logos/core';
+import { recordVerificationMetrics } from '../metrics/index.js';
 
 export async function evaluateRoute(
   request: FastifyRequest,
@@ -74,7 +75,7 @@ export async function evaluateRoute(
     request.log.info({
       decision: result.decision,
       confidence: result.confidence,
-      gap: result.gap.distance.overall,
+      gap: result.gap.overallDistance,
       duration
     }, 'Verification completed');
 
@@ -83,22 +84,25 @@ export async function evaluateRoute(
       decision: result.decision,
       confidence: result.confidence,
       gap: {
-        overall: result.gap.distance.overall,
-        semantic: result.gap.distance.semantic,
-        factual: result.gap.distance.factual,
-        logical: result.gap.distance.logical,
-        ontological: result.gap.distance.ontological,
+        overall: result.gap.overallDistance,
+        semantic: result.gap.semantic?.distance || 0,
+        factual: result.gap.factual?.distance || 0,
+        logical: result.gap.logical?.distance || 0,
+        ontological: result.gap.ontological?.distance || 0,
         dominantType: result.gap.dominantType,
         bridgeable: result.gap.bridgeable
       },
       mediation: {
-        type: result.gap.mediation.type,
+        type: result.gap.mediation?.type || 'direct',
         kenosisApplied: result.kenosisApplied || 0,
         resurrectionAttempted: result.resurrectionAttempted || false
       },
       finalState: result.finalState,
       timestamp: new Date().toISOString()
     };
+
+    // Record metrics for monitoring
+    recordVerificationMetrics(response, duration / 1000); // Convert ms to seconds
 
     return response;
   } catch (error) {
