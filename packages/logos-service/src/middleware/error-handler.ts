@@ -4,6 +4,7 @@
 
 import type { FastifyError, FastifyRequest, FastifyReply } from 'fastify';
 import type { ErrorResponse } from '../types/api.js';
+import { Sentry } from '../sentry.js';
 
 export async function errorHandler(
   error: FastifyError,
@@ -17,6 +18,31 @@ export async function errorHandler(
     method: request.method,
     url: request.url
   }, 'Request error');
+
+  // Capture in Sentry (with request context)
+  Sentry.withScope((scope) => {
+    scope.setContext('request', {
+      id: request.id,
+      method: request.method,
+      url: request.url,
+      headers: request.headers
+    });
+
+    // Add user context if available (e.g., from auth middleware)
+    if ((request as any).user) {
+      scope.setUser({ id: (request as any).user.id });
+    }
+
+    // Set tags
+    scope.setTag('route', request.url);
+    scope.setTag('method', request.method);
+
+    // Only capture 500 errors in Sentry
+    const statusCode = error.statusCode || 500;
+    if (statusCode >= 500) {
+      Sentry.captureException(error);
+    }
+  });
 
   // Determine status code
   const statusCode = error.statusCode || 500;

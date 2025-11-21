@@ -8,6 +8,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import { EvaluateRequestSchema, type EvaluateResponse } from '../types/api.js';
 import type { Source, Manifestation, Signal } from '@logos/core';
 import { recordVerificationMetrics } from '../metrics/index.js';
+import { captureVerificationError } from '../sentry.js';
 
 export async function evaluateRoute(
   request: FastifyRequest,
@@ -107,6 +108,14 @@ export async function evaluateRoute(
     return response;
   } catch (error) {
     request.log.error({ err: error }, 'Verification failed');
+
+    // Capture verification error in Sentry with context
+    if (error instanceof Error) {
+      captureVerificationError(error, {
+        source: sourceData,
+        manifestation: manifestData
+      });
+    }
 
     return reply.code(500).send({
       error: 'Internal Server Error',

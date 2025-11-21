@@ -12,12 +12,16 @@ import { createRoutes } from './routes/index.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { LogosEngine } from '@logos/core';
 import Redis from 'ioredis';
+import { initSentry, flushSentry } from './sentry.js';
 
 const PORT = parseInt(process.env.PORT || '8787');
 const HOST = process.env.HOST || '0.0.0.0';
 const REDIS_URL = process.env.REDIS_URL;
 
 async function buildServer() {
+  // Initialize Sentry for error tracking
+  initSentry();
+
   // Create Fastify instance with logging
   const fastify = Fastify({
     logger: {
@@ -110,6 +114,13 @@ async function buildServer() {
   signals.forEach((signal) => {
     process.on(signal, async () => {
       fastify.log.info(`Received ${signal}, closing server gracefully`);
+
+      // Flush Sentry events before shutdown
+      try {
+        await flushSentry(2000);
+      } catch (err) {
+        fastify.log.error({ err }, 'Failed to flush Sentry');
+      }
 
       if (redis) {
         await redis.quit();

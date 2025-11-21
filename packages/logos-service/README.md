@@ -93,6 +93,23 @@ Health check endpoint.
 }
 ```
 
+### GET /metrics
+
+Prometheus metrics endpoint for monitoring.
+
+**Response:** Prometheus exposition format
+
+```
+# HELP logos_verifications_total Total number of verification requests processed
+# TYPE logos_verifications_total counter
+logos_verifications_total{decision="ALLOW"} 42
+
+# HELP logos_gap_distance Gap distance measurements by dimension
+# TYPE logos_gap_distance histogram
+logos_gap_distance_bucket{le="0.1",dimension="semantic"} 35
+...
+```
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -109,6 +126,11 @@ Health check endpoint.
 | `RATE_LIMIT_MAX` | `60` | Max requests per time window |
 | `RATE_LIMIT_WINDOW` | `1 minute` | Rate limit time window |
 | `ALLOWED_ORIGINS` | `*` | CORS allowed origins |
+| `SENTRY_DSN` | - | Sentry error tracking DSN |
+| `SENTRY_ENABLED` | `false` | Enable Sentry in development |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.1` | Performance tracing sample rate |
+| `SENTRY_PROFILES_SAMPLE_RATE` | `0.1` | Profiling sample rate |
+| `APP_VERSION` | `0.1.0` | Application version for Sentry releases |
 
 ## Architecture
 
