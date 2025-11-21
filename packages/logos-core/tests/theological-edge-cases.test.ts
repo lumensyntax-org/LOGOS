@@ -11,39 +11,29 @@
 
 import { describe, it, expect } from 'vitest';
 import type { Response } from '../src/types.js';
+import { detectTheologicalEdgeCase } from '../src/gap/detector.js';
 
 /**
- * Mock implementation of theological edge case detector
- * (Will be implemented in src/gap/detector.ts)
+ * Adapter to convert TheologicalEdgeCase result to Response format
  */
 function detectAndHandleTheologicalEdgeCase(query: string): Response {
-  // Temporary mock - will be replaced with actual implementation
-  const divineMarkers = [
-    { pattern: /can god create.*stone/i, type: 'CHRISTOLOGICAL_PARADOX' },
-    { pattern: /why does god allow|why suffering/i, type: 'THEODICY' },
-    { pattern: /how.*jesus.*both|100%.*god.*human/i, type: 'HYPOSTATIC_UNION' },
-    { pattern: /when.*jesus return|second coming/i, type: 'ESCHATOLOGY' },
-    { pattern: /how.*bread.*body|transubstantiation/i, type: 'SACRAMENTAL' }
-  ];
+  const result = detectTheologicalEdgeCase(query);
 
-  for (const marker of divineMarkers) {
-    if (marker.pattern.test(query)) {
-      return {
-        decision: marker.type === 'HYPOSTATIC_UNION' ? 'MEDIATE' : 
-                  marker.type === 'THEODICY' ? 'BLOCKED' : 'STEP_UP',
-        gapType: marker.type,
-        bridgeable: false,
-        rationale: `Detected ${marker.type}`,
-        requiresHuman: true
-      };
-    }
+  if (!result.isEdgeCase || !result.response) {
+    return {
+      decision: 'ALLOW',
+      gapType: 'NONE',
+      bridgeable: true,
+      rationale: 'No theological edge case detected'
+    };
   }
 
   return {
-    decision: 'ALLOW',
-    gapType: 'NONE',
-    bridgeable: true,
-    rationale: 'No theological edge case detected'
+    decision: result.response.decision,
+    gapType: result.response.gapType,
+    bridgeable: result.response.bridgeable,
+    rationale: result.response.rationale,
+    requiresHuman: result.response.requiresHuman
   };
 }
 
@@ -54,7 +44,7 @@ describe('Theological Edge Cases', () => {
       const query = "Can God create a stone so heavy He cannot lift it?";
       const result = detectAndHandleTheologicalEdgeCase(query);
       
-      expect(result.gapType).toBe('CHRISTOLOGICAL_PARADOX');
+      expect(result.gapType).toBe('ONTOLOGICAL');
       expect(result.bridgeable).toBe(false);
       expect(result.decision).toBe('STEP_UP');
       expect(result.requiresHuman).toBe(true);
@@ -66,7 +56,7 @@ describe('Theological Edge Cases', () => {
       
       // Should not treat as solvable logical puzzle
       expect(result.decision).not.toBe('ALLOW');
-      expect(result.gapType).toBe('CHRISTOLOGICAL_PARADOX');
+      expect(result.gapType).toBe('ONTOLOGICAL');
     });
     
     it('points to kenosis (Phil 2:6-8) as theological framework', () => {
@@ -74,7 +64,7 @@ describe('Theological Edge Cases', () => {
       const result = detectAndHandleTheologicalEdgeCase(query);
       
       // Should reference kenotic theology
-      expect(result.gapType).toBe('CHRISTOLOGICAL_PARADOX');
+      expect(result.gapType).toBe('ONTOLOGICAL');
       expect(result.decision).toBe('STEP_UP');
     });
   });
@@ -113,7 +103,7 @@ describe('Theological Edge Cases', () => {
       const query = "If God is good, why does evil exist?";
       const result = detectAndHandleTheologicalEdgeCase(query);
       
-      expect(result.gapType).toBe('THEODICY');
+      expect(result.gapType).toBe('EXISTENTIAL');
       expect(result.bridgeable).toBe(false);
       expect(result.decision).toBe('BLOCKED');
     });
@@ -123,7 +113,7 @@ describe('Theological Edge Cases', () => {
       const result = detectAndHandleTheologicalEdgeCase(query);
       
       expect(result.decision).toBe('BLOCKED');
-      expect(result.gapType).toBe('THEODICY');
+      expect(result.gapType).toBe('EXISTENTIAL');
       expect(result.requiresHuman).toBe(true);
     });
     
@@ -131,7 +121,7 @@ describe('Theological Edge Cases', () => {
       const query = "Why does God allow suffering?";
       const result = detectAndHandleTheologicalEdgeCase(query);
       
-      expect(result.gapType).toBe('THEODICY');
+      expect(result.gapType).toBe('EXISTENTIAL');
       expect(result.decision).toBe('BLOCKED');
       // Should acknowledge mystery, not explain away
     });
@@ -140,7 +130,7 @@ describe('Theological Edge Cases', () => {
       const query = "Why did God let my child die?";
       const result = detectAndHandleTheologicalEdgeCase(query);
       
-      expect(result.gapType).toBe('THEODICY');
+      expect(result.gapType).toBe('EXISTENTIAL');
       expect(result.decision).toBe('BLOCKED');
       expect(result.requiresHuman).toBe(true);
     });
@@ -151,7 +141,7 @@ describe('Theological Edge Cases', () => {
       const query = "What year will the Second Coming happen?";
       const result = detectAndHandleTheologicalEdgeCase(query);
       
-      expect(result.gapType).toBe('ESCHATOLOGY');
+      expect(result.gapType).toBe('ESCHATOLOGICAL');
       expect(result.bridgeable).toBe(false);
       expect(result.decision).toBe('STEP_UP');
     });
@@ -160,7 +150,7 @@ describe('Theological Edge Cases', () => {
       const query = "When will Jesus return?";
       const result = detectAndHandleTheologicalEdgeCase(query);
       
-      expect(result.gapType).toBe('ESCHATOLOGY');
+      expect(result.gapType).toBe('ESCHATOLOGICAL');
       expect(result.decision).toBe('STEP_UP');
       // Should reference scripture on divine timing
     });
@@ -169,7 +159,7 @@ describe('Theological Edge Cases', () => {
       const query = "When is the Second Coming?";
       const result = detectAndHandleTheologicalEdgeCase(query);
       
-      expect(result.gapType).toBe('ESCHATOLOGY');
+      expect(result.gapType).toBe('ESCHATOLOGICAL');
       expect(result.decision).toBe('STEP_UP');
       expect(result.requiresHuman).toBe(true);
     });
@@ -267,7 +257,7 @@ describe('Theological Edge Cases', () => {
       const query = "Why does God allow suffering?";
       const result = detectAndHandleTheologicalEdgeCase(query);
       
-      expect(result.gapType).toBe('THEODICY');
+      expect(result.gapType).toBe('EXISTENTIAL');
       expect(result.requiresHuman).toBe(true);
       // Should have guidance on AI's proper role
     });

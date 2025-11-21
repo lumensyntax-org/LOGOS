@@ -115,7 +115,9 @@ export class LogosEngine {
 
     // Step 4: Check if mediation is possible (large unbridgeable gaps block)
     if (!gap.bridgeable && gap.overallDistance > 0.8) {
-      return this.createBlockedResult(gap, "Gap too large for mediation");
+      // Even blocked results should have smoothed confidence
+      const smoothedConfidence = this.smoothConfidence(adjustedConfidence);
+      return this.createBlockedResult(gap, "Gap too large for mediation", smoothedConfidence);
     }
     
     // Step 5: Smooth confidence over time (EWMA)
@@ -270,13 +272,14 @@ export class LogosEngine {
    * Create a blocked result
    */
   private createBlockedResult(
-    gap: any, 
-    reason: string
+    gap: any,
+    reason: string,
+    confidence: number = 0
   ): ChristologicalResult {
     return {
       gap,
       decision: 'BLOCK',
-      confidence: 0,
+      confidence,
       sacraments: [],
       redemptionAttempted: false,
       finalState: 'blocked'
