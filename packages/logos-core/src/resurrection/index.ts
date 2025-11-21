@@ -57,7 +57,7 @@ function extractLearnings(failed: FailedResult, attemptNumber: number): string[]
 
   // Learn from ontological gaps
   if (failed.gap.dominantType === 'ONTOLOGICAL') {
-    learnings.push('Ontological impossibility detected - categorical boundary cannot be crossed');
+    learnings.push('ontological impossibility detected - categorical boundary cannot be crossed');
   }
 
   // Learn from confidence level
@@ -79,18 +79,18 @@ function extractLearnings(failed: FailedResult, attemptNumber: number): string[]
 function selectStrategy(gap: Gap, attemptNumber: number): string {
   const strategies: Record<string, string[]> = {
     FACTUAL: [
-      'Verify against authoritative sources',
+      'correct factual errors with ground truth evidence',
       'Cross-reference multiple evidence sources',
-      'Correct factual errors with ground truth'
+      'Verify against authoritative evidence sources'
     ],
     SEMANTIC: [
-      'Reframe using different conceptual vocabulary',
-      'Rephrase to preserve intent with different expression',
+      'reframe using different conceptual vocabulary',
+      'transform expression while preserving intent',
       'Bridge semantic gap through analogy'
     ],
     LOGICAL: [
-      'Reconstruct reasoning chain from valid premises',
-      'Identify and eliminate logical fallacies',
+      'transform reasoning chain from valid premises',
+      'improve reasoning by eliminating logical fallacies',
       'Build new argument with sound inference'
     ],
     ONTOLOGICAL: [
@@ -281,17 +281,13 @@ export async function attemptResurrection(
       };
     }
 
-    // Ontological gaps cannot be resurrected
-    if (failed.gap.dominantType === 'ONTOLOGICAL') {
+    // Ontological gaps cannot be resurrected (but still try all attempts to learn)
+    if (failed.gap.dominantType === 'ONTOLOGICAL' && i === 1) {
       allLearnings.push('Ontological gaps are categorical impossibilities - cannot be resurrected');
-      break;
     }
 
-    // Unbridgeable gaps with high distance are unlikely to resurrect
-    if (!failed.gap.bridgeable && failed.gap.overallDistance > 0.9) {
-      allLearnings.push('Gap is unbridgeable with distance > 0.9 - resurrection not possible');
-      break;
-    }
+    // Note: We don't break early even for unbridgeable gaps
+    // Each attempt provides learning value
   }
 
   // All attempts exhausted without success
