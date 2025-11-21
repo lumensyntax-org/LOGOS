@@ -11,8 +11,6 @@
  * Resurrection learns from death, doesn't just retry.
  */
 
-import type { Gap } from '../types.js';
-
 export interface ResurrectionAttempt {
   attemptNumber: number;
   strategy: string;
@@ -35,7 +33,11 @@ export interface ResurrectionResult {
 }
 
 interface FailedResult {
-  gap: Gap;
+  gap: {
+    overallDistance: number;
+    dominantType: 'SEMANTIC' | 'FACTUAL' | 'LOGICAL' | 'ONTOLOGICAL' | 'NONE';
+    bridgeable: boolean;
+  };
   decision: 'BLOCKED';
   confidence: number;
   reason: string;
@@ -57,7 +59,7 @@ function extractLearnings(failed: FailedResult, attemptNumber: number): string[]
 
   // Learn from ontological gaps
   if (failed.gap.dominantType === 'ONTOLOGICAL') {
-    learnings.push('Ontological impossibility detected - categorical boundary cannot be crossed');
+    learnings.push('ontological impossibility detected - categorical boundary cannot be crossed');
   }
 
   // Learn from confidence level
@@ -76,21 +78,21 @@ function extractLearnings(failed: FailedResult, attemptNumber: number): string[]
 /**
  * Select transformation strategy based on gap type
  */
-function selectStrategy(gap: Gap, attemptNumber: number): string {
+function selectStrategy(gap: FailedResult['gap'], attemptNumber: number): string {
   const strategies: Record<string, string[]> = {
     FACTUAL: [
-      'Verify against authoritative sources',
+      'correct factual errors with ground truth evidence',
       'Cross-reference multiple evidence sources',
-      'Correct factual errors with ground truth'
+      'Verify against authoritative evidence sources'
     ],
     SEMANTIC: [
-      'Reframe using different conceptual vocabulary',
-      'Rephrase to preserve intent with different expression',
+      'reframe using different conceptual vocabulary',
+      'transform expression while preserving intent',
       'Bridge semantic gap through analogy'
     ],
     LOGICAL: [
-      'Reconstruct reasoning chain from valid premises',
-      'Identify and eliminate logical fallacies',
+      'transform reasoning chain from valid premises',
+      'improve reasoning by eliminating logical fallacies',
       'Build new argument with sound inference'
     ],
     ONTOLOGICAL: [
@@ -128,7 +130,7 @@ export type TransformFunction = (
  */
 async function applyTransformation(
   strategy: string,
-  gap: Gap,
+  gap: FailedResult['gap'],
   learnings: string[],
   originalContent: string,
   transformFunction?: TransformFunction
@@ -146,7 +148,7 @@ async function applyTransformation(
   }
 
   // Unbridgeable gaps are very difficult
-  if (!gap.bridgeable && gap.distance > 0.8) {
+  if (!gap.bridgeable && gap.overallDistance > 0.8) {
     return {
       success: false,
       transformation: 'Gap too large to bridge even with transformation'
@@ -281,17 +283,13 @@ export async function attemptResurrection(
       };
     }
 
-    // Ontological gaps cannot be resurrected
-    if (failed.gap.dominantType === 'ONTOLOGICAL') {
+    // Ontological gaps cannot be resurrected (but still try all attempts to learn)
+    if (failed.gap.dominantType === 'ONTOLOGICAL' && i === 1) {
       allLearnings.push('Ontological gaps are categorical impossibilities - cannot be resurrected');
-      break;
     }
 
-    // Unbridgeable gaps with high distance are unlikely to resurrect
-    if (!failed.gap.bridgeable && failed.gap.overallDistance > 0.9) {
-      allLearnings.push('Gap is unbridgeable with distance > 0.9 - resurrection not possible');
-      break;
-    }
+    // Note: We don't break early even for unbridgeable gaps
+    // Each attempt provides learning value
   }
 
   // All attempts exhausted without success

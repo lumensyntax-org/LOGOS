@@ -81,26 +81,26 @@ function generateRationale(gap: Gap, humility: number): string {
   // Add gap-specific explanation
   switch (gap.type) {
     case 'ONTOLOGICAL':
-      rationale += 'Ontological impossibility requires maximum humility - ' +
+      rationale += 'ontological impossibility requires maximum humility - ' +
                   'this Gap represents categorical boundaries that cannot be crossed by assertion alone. ' +
                   'Kenosis acknowledges the limits of what can be claimed.';
       break;
 
     case 'LOGICAL':
-      rationale += 'Logical gaps indicate inference failures. ' +
-                  'Humility restrains confidence until reasoning can be corrected. ' +
+      rationale += 'Logical gaps indicate inference problems. ' +
+                  'humility restrains confidence until reasoning can be corrected. ' +
                   'This self-limitation honors the logos (reason) that structures reality.';
       break;
 
     case 'FACTUAL':
       rationale += 'Factual gaps require evidence-based restraint. ' +
-                  'Humility withholds claims until facts can be verified. ' +
+                  'humility withholds claims until facts can be verified. ' +
                   'Truth demands correspondence to reality, not confident assertion.';
       break;
 
     case 'SEMANTIC':
       rationale += 'Semantic gaps indicate meaning drift. ' +
-                  'Humility acknowledges when intent and expression diverge. ' +
+                  'humility acknowledges when intent and expression diverge. ' +
                   'Self-limitation prevents over-claiming semantic equivalence.';
       break;
   }

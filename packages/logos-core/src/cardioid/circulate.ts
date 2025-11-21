@@ -49,9 +49,24 @@ export async function circulate(
     maxCycles: config.maxCycles || 5,
     source,
     manifestation,
+    signals: signals.length > 0 ? signals : null,
     gap: null,
     kenosisApplied: 0,
     cuspDecision: null,
+    verifierPosture: {
+      weights: {
+        grounding_factual: 1.0,
+        semantic_coherence: 0.8,
+        logical_consistency: 0.7,
+        completeness: 0.6
+      },
+      thresholds: {
+        allowThreshold: 0.7,
+        blockThreshold: 0.3
+      },
+      learningRate: 0.1,
+      history: []
+    },
     memory: config.initialMemory || createMarianMemory(),
     terminated: false,
     terminationReason: null,
